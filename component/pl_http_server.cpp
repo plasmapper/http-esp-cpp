@@ -1,5 +1,10 @@
 #include "pl_http_server.h"
+#include "esp_check.h"
 #include <map>
+
+//==============================================================================
+
+static const char* TAG = "pl_http_server";
 
 //==============================================================================
 
@@ -74,13 +79,20 @@ HttpServer::~HttpServer() {
 //==============================================================================
 
 esp_err_t HttpServer::Lock (TickType_t timeout) {
-  return mutex.Lock (timeout);
+  esp_err_t error = mutex.Lock (timeout);
+  if (error == ESP_OK)
+    return ESP_OK;
+  if (error == ESP_ERR_TIMEOUT && timeout == 0)
+    return ESP_ERR_TIMEOUT;
+  ESP_RETURN_ON_ERROR (error, TAG, "mutex lock failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpServer::Unlock() {
-  return mutex.Unlock();
+  ESP_RETURN_ON_ERROR (mutex.Unlock(), TAG, "mutex unlock failed");
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -104,7 +116,7 @@ esp_err_t HttpServer::Enable() {
   serverConfig.httpd.recv_wait_timeout = readTimeout * portTICK_PERIOD_MS / 1000 + 1;
   serverConfig.httpd.uri_match_fn = httpd_uri_match_wildcard;
 
-  PL_RETURN_ON_ERROR (httpd_ssl_start (&serverHandle, &serverConfig));
+  ESP_RETURN_ON_ERROR (httpd_ssl_start (&serverHandle, &serverConfig), TAG, "start failed");
   enabled = true;
   enabledEvent.Generate();
 
@@ -116,7 +128,7 @@ esp_err_t HttpServer::Enable() {
 
   for (uint32_t i = 0; i < sizeof(methods) / sizeof (http_method); i++) {
     requestHandlerInfo.method = methods[i];
-    PL_RETURN_ON_ERROR (httpd_register_uri_handler (serverHandle, &requestHandlerInfo));
+    ESP_RETURN_ON_ERROR (httpd_register_uri_handler (serverHandle, &requestHandlerInfo), TAG, "register URI handler failed");
   }
   return ESP_OK;
 }
@@ -128,7 +140,7 @@ esp_err_t HttpServer::Disable() {
   if (!enabled)
     return ESP_OK;
 
-  PL_RETURN_ON_ERROR (httpd_unregister_uri (serverHandle, "*"));
+  ESP_RETURN_ON_ERROR (httpd_unregister_uri (serverHandle, "*"), TAG, "unregister URI handler failed");
   httpd_ssl_stop (serverHandle);
   enabled = false;
   disabledEvent.Generate();
@@ -154,7 +166,8 @@ uint16_t HttpServer::GetPort() {
 esp_err_t HttpServer::SetPort (uint16_t port) {
   LockGuard lg (*this);
   this->port = port;
-  return RestartIfEnabled();
+  ESP_RETURN_ON_ERROR (RestartIfEnabled(), TAG, "restart failed");
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -169,7 +182,8 @@ size_t HttpServer::GetMaxNumberOfClients() {
 esp_err_t HttpServer::SetMaxNumberOfClients (size_t maxNumberOfClients) {
   LockGuard lg (*this);
   this->maxNumberOfClients = maxNumberOfClients;
-  return RestartIfEnabled();
+  ESP_RETURN_ON_ERROR (RestartIfEnabled(), TAG, "restart failed");
+  return ESP_OK;
 }
 //==============================================================================
 
@@ -183,7 +197,8 @@ TickType_t HttpServer::GetReadTimeout() {
 esp_err_t HttpServer::SetReadTimeout (TickType_t timeout) {
   LockGuard lg (*this);
   this->readTimeout = timeout;
-  return RestartIfEnabled();  
+  ESP_RETURN_ON_ERROR (RestartIfEnabled(), TAG, "restart failed");
+  return ESP_OK;  
 }
 
 //==============================================================================
@@ -191,7 +206,8 @@ esp_err_t HttpServer::SetReadTimeout (TickType_t timeout) {
 esp_err_t HttpServer::SetTaskParameters (const TaskParameters& taskParameters) {
   LockGuard lg (*this);
   this->taskParameters = taskParameters;
-  return RestartIfEnabled();
+  ESP_RETURN_ON_ERROR (RestartIfEnabled(), TAG, "restart failed");
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -207,26 +223,27 @@ esp_err_t HttpServer::HandleRequest (httpd_req_t* req) {
 
   if (strlen (req->uri) + 1 > uriBuffer->size) {
     transaction.WriteResponse (414);
-    return ESP_ERR_INVALID_SIZE;
+    ESP_RETURN_ON_ERROR (ESP_ERR_INVALID_SIZE, TAG, "URI buffer is too small");
   } 
   strcpy ((char*)uriBuffer->data, req->uri);
+
+  if (!headerBuffer->size) {
+    transaction.WriteResponse (431);
+    ESP_RETURN_ON_ERROR (ESP_ERR_INVALID_SIZE, TAG, "header buffer is too small");
+  }
 
   // Not good, but there seem to be no other way to access all headers
   char* src = (char*)((uint8_t*)req->aux + sizeof (void*));
   char* srcEnd = src + CONFIG_HTTPD_MAX_REQ_HDR_LEN;
   char* dest = (char*)headerBuffer->data;
   char* destEnd = dest + headerBuffer->size - 1;
-  if (dest >= destEnd) {
-    transaction.WriteResponse (431);
-    return ESP_ERR_INVALID_SIZE;
-  }
 
   while (src < srcEnd && *src) {
     while (src < srcEnd && *src) {
       *(dest++) = *src;
       if (dest >= destEnd) {
         transaction.WriteResponse (431);
-        return ESP_ERR_INVALID_SIZE;
+        ESP_RETURN_ON_ERROR (ESP_ERR_INVALID_SIZE, TAG, "header buffer is too small");
       }
       if (*src != ':')
         src++;
@@ -244,7 +261,8 @@ esp_err_t HttpServer::HandleRequest (httpd_req_t* req) {
   esp_err_t err = server.HandleRequest (transaction);
   if (err != ESP_OK)
     transaction.WriteResponse (500);
-  return err;
+  ESP_RETURN_ON_ERROR (err, TAG, "handle request error");
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -252,8 +270,9 @@ esp_err_t HttpServer::HandleRequest (httpd_req_t* req) {
 esp_err_t HttpServer::RestartIfEnabled() {
   if (!enabled)
     return ESP_OK;
-  PL_RETURN_ON_ERROR (Disable());
-  return Enable();
+  ESP_RETURN_ON_ERROR (Disable(), TAG, "disable failed");
+  ESP_RETURN_ON_ERROR (Enable(), TAG, "enable failed");
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -268,8 +287,9 @@ esp_err_t HttpServer::Transaction::ReadRequestBody (void* dest, size_t size) {
   if (res <= 0) {
     if (res == HTTPD_SOCK_ERR_TIMEOUT) {
       httpd_resp_send_408 (req);
-    } 
-    return ESP_FAIL;
+      ESP_RETURN_ON_ERROR (ESP_ERR_TIMEOUT, TAG, "timeout");
+    }
+    ESP_RETURN_ON_ERROR (ESP_FAIL, TAG, "request receive error"); 
   }
   return ESP_OK;
 }
@@ -281,9 +301,9 @@ esp_err_t HttpServer::Transaction::WriteResponse (uint16_t statusCode, const voi
   auto statusCodeIterator = httpStatusCodeMap.find (statusCode);
   if (statusCodeIterator != httpStatusCodeMap.end())
     status += statusCodeIterator->second;
-  PL_RETURN_ON_ERROR (httpd_resp_set_status (req, status.c_str()));
-
-  return httpd_resp_send (req, (char*)body, bodySize);
+  ESP_RETURN_ON_ERROR (httpd_resp_set_status (req, status.c_str()), TAG, "set status error");
+  ESP_RETURN_ON_ERROR (httpd_resp_send (req, (char*)body, bodySize), TAG, "response send error");
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -329,15 +349,16 @@ size_t HttpServer::Transaction::GetRequestBodySize() {
 
 esp_err_t HttpServer::Transaction::SetResponseHeader (const std::string& name, const std::string& value) {
   char*& responseHeaderDataEnd = server.responseHeaderDataEnd;
-  if (responseHeaderDataEnd - (char*)server.headerBuffer->data + name.size() + value.size() + 2 > server.headerBuffer->size)
-    return ESP_ERR_INVALID_SIZE;
+  ESP_RETURN_ON_FALSE (responseHeaderDataEnd - (char*)server.headerBuffer->data + name.size() + value.size() + 2 <= server.headerBuffer->size, \
+                       ESP_ERR_INVALID_SIZE, TAG, "header buffer is too small");
   char* nameStr = responseHeaderDataEnd;
   memcpy (responseHeaderDataEnd, name.c_str(), name.size() + 1);
   responseHeaderDataEnd += name.size() + 1;
   char* valueStr = responseHeaderDataEnd;
   memcpy (responseHeaderDataEnd, value.c_str(), value.size() + 1);
   responseHeaderDataEnd += value.size() + 1;
-  return httpd_resp_set_hdr (req, nameStr, valueStr);
+  ESP_RETURN_ON_ERROR (httpd_resp_set_hdr (req, nameStr, valueStr), TAG, "set header error");
+  return ESP_OK;
 }
 
 //==============================================================================

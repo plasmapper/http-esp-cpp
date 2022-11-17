@@ -1,14 +1,13 @@
 #include "pl_http_server_transaction.h"
+#include "esp_check.h"
+
+//==============================================================================
+
+static const char* TAG = "pl_http_server_transaction";
 
 //==============================================================================
 
 namespace PL {
-
-//==============================================================================
-
-esp_err_t HttpServerTransaction::WriteResponse (uint16_t statusCode, const void* body, size_t bodySize) {
-  return WriteResponse (statusCode, body, bodySize);
-}
 
 //==============================================================================
 

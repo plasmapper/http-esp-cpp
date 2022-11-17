@@ -1,5 +1,10 @@
 #include "pl_http_client.h"
+#include "esp_check.h"
 #include <map>
+
+//==============================================================================
+
+static const char* TAG = "pl_http_client";
 
 //==============================================================================
 
@@ -70,54 +75,64 @@ HttpClient::~HttpClient() {
 //==============================================================================
 
 esp_err_t HttpClient::Lock (TickType_t timeout) {
-  return mutex.Lock (timeout);
+  esp_err_t error = mutex.Lock (timeout);
+  if (error == ESP_OK)
+    return ESP_OK;
+  if (error == ESP_ERR_TIMEOUT && timeout == 0)
+    return ESP_ERR_TIMEOUT;
+  ESP_RETURN_ON_ERROR (error, TAG, "mutex lock failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpClient::Unlock() {
-  return mutex.Unlock();
+  ESP_RETURN_ON_ERROR (mutex.Unlock(), TAG, "mutex unlock failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpClient::Initialize () {
-  LockGuard lg (*this);  
-  return (clientHandle || (clientHandle = esp_http_client_init (&clientConfig))) ? ESP_OK : ESP_FAIL;
+  LockGuard lg (*this);
+  if (clientHandle)
+    return ESP_OK;
+  clientHandle = esp_http_client_init (&clientConfig);
+  ESP_RETURN_ON_FALSE (clientHandle, ESP_FAIL, TAG, "init failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpClient::WriteRequestHeaders (HttpMethod method, const std::string& uri, size_t bodySize) {
   LockGuard lg (*this);
-  if (!clientHandle)
-    return ESP_ERR_INVALID_STATE;
+  ESP_RETURN_ON_FALSE (clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
 
   auto espMethod = httpMethodMap.find (method);
-  if (espMethod == httpMethodMap.end())
-    return ESP_ERR_INVALID_ARG;
+  ESP_RETURN_ON_FALSE (espMethod != httpMethodMap.end(), ESP_ERR_INVALID_ARG, TAG, "invalid HTTP method");
 
-  PL_RETURN_ON_ERROR (esp_http_client_flush_response (clientHandle, NULL));
-  PL_RETURN_ON_ERROR (esp_http_client_set_method (clientHandle, espMethod->second));
-  PL_RETURN_ON_ERROR (esp_http_client_set_url (clientHandle, uri.c_str()));
-  return esp_http_client_open (clientHandle, bodySize);
+  ESP_RETURN_ON_ERROR (esp_http_client_flush_response (clientHandle, NULL), TAG, "flush response error");
+  ESP_RETURN_ON_ERROR (esp_http_client_set_method (clientHandle, espMethod->second), TAG, "set method failed");
+  ESP_RETURN_ON_ERROR (esp_http_client_set_url (clientHandle, uri.c_str()), TAG, "set URL failed");
+  ESP_RETURN_ON_ERROR (esp_http_client_open (clientHandle, bodySize), TAG, "open failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpClient::WriteRequestBody (const void* src, size_t size) {
   LockGuard lg (*this);
-  if (!clientHandle)
-    return ESP_ERR_INVALID_STATE;
-
-  return esp_http_client_write (clientHandle, (char*)src, size) >= 0 ? ESP_OK : ESP_FAIL;
+  ESP_RETURN_ON_FALSE (clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
+  ESP_RETURN_ON_FALSE (esp_http_client_write (clientHandle, (char*)src, size) >= 0, ESP_FAIL, TAG, "write failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpClient::WriteRequest (HttpMethod method, const std::string& uri, const std::string& body) {
-  PL_RETURN_ON_ERROR (WriteRequestHeaders (method, uri, body.size()));
-  return WriteRequestBody (body.data(), body.size());
+  ESP_RETURN_ON_ERROR (WriteRequestHeaders (method, uri, body.size()), TAG, "write request headers failed");
+  ESP_RETURN_ON_ERROR (WriteRequestBody (body.data(), body.size()), TAG, "write request body failed");
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -131,16 +146,13 @@ esp_err_t HttpClient::WriteRequest (HttpMethod method, const std::string& uri) {
 esp_err_t HttpClient::ReadResponseHeaders (ushort& statusCode, size_t* bodySize) {
   LockGuard lg (*this);
   LockGuard lgBuffer (*headerBuffer);
+  ESP_RETURN_ON_FALSE (clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
 
-  if (!clientHandle)
-    return ESP_ERR_INVALID_STATE;
-
-  PL_RETURN_ON_ERROR (esp_http_client_set_timeout_ms (clientHandle, readTimeout * portTICK_PERIOD_MS));
+  ESP_RETURN_ON_ERROR (esp_http_client_set_timeout_ms (clientHandle, readTimeout * portTICK_PERIOD_MS), TAG, "HTTP client set timeout failed");
   headerDataEnd = (char*)headerBuffer->data;
   
   int64_t tempResponseBodySize = esp_http_client_fetch_headers (clientHandle);
-  if (tempResponseBodySize < 0)
-    return ESP_FAIL;
+  ESP_RETURN_ON_FALSE (tempResponseBodySize >= 0, ESP_FAIL, TAG, "fetch headers failed");
 
   statusCode = esp_http_client_get_status_code (clientHandle);
   if (statusCode == 401)
@@ -155,17 +167,17 @@ esp_err_t HttpClient::ReadResponseHeaders (ushort& statusCode, size_t* bodySize)
 
 esp_err_t HttpClient::ReadResponseBody (void* dest, size_t size) {
   LockGuard lg (*this);
-  if (!clientHandle)
-    return ESP_ERR_INVALID_STATE;
-
-  PL_RETURN_ON_ERROR (esp_http_client_set_timeout_ms (clientHandle, readTimeout * portTICK_PERIOD_MS));
-  return (esp_http_client_read (clientHandle, (char*)dest, size) == size) ? ESP_OK : ESP_FAIL; 
+  ESP_RETURN_ON_FALSE (clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
+  ESP_RETURN_ON_ERROR (esp_http_client_set_timeout_ms (clientHandle, readTimeout * portTICK_PERIOD_MS), TAG, "set timeout failed");
+  ESP_RETURN_ON_FALSE (esp_http_client_read (clientHandle, (char*)dest, size) == size, ESP_FAIL, TAG, "read failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpClient::Disconnect() {
-  return esp_http_client_close (clientHandle);
+  ESP_RETURN_ON_ERROR (esp_http_client_close (clientHandle), TAG, "close failed");
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -183,9 +195,11 @@ esp_err_t HttpClient::SetPort (uint16_t port) {
 
   if (!clientHandle)
     return ESP_OK;
-  esp_http_client_cleanup (clientHandle);
+  esp_http_client_handle_t tempHandle = clientHandle;
   clientHandle = NULL;
-  return Initialize(); 
+  ESP_RETURN_ON_ERROR (esp_http_client_cleanup (tempHandle), TAG, "cleanup failed");
+  ESP_RETURN_ON_ERROR (Initialize(), TAG, "initialize failed");
+  return ESP_OK; 
 }
 
 //==============================================================================
@@ -207,45 +221,39 @@ esp_err_t HttpClient::SetReadTimeout (TickType_t timeout) {
 
 esp_err_t HttpClient::SetAuthScheme (HttpAuthScheme scheme) {
   LockGuard lg (*this);
-  if (!clientHandle)
-    return ESP_ERR_INVALID_STATE;
-
+  ESP_RETURN_ON_FALSE (clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
   auto espAuthScheme = httpAuthSchemeMap.find (scheme);
-  if (espAuthScheme == httpAuthSchemeMap.end())
-    return ESP_ERR_INVALID_ARG;
-
-  return esp_http_client_set_authtype (clientHandle, espAuthScheme->second);
+  ESP_RETURN_ON_FALSE (espAuthScheme != httpAuthSchemeMap.end(), ESP_ERR_INVALID_ARG, TAG, "invalid authentication scheme");
+  ESP_RETURN_ON_ERROR (esp_http_client_set_authtype (clientHandle, espAuthScheme->second), TAG, "set authentication scheme failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpClient::SetAuthCredentials (const std::string& username, const std::string& password) {
   LockGuard lg (*this);
-  if (!clientHandle)
-    return ESP_ERR_INVALID_STATE;
-
-  PL_RETURN_ON_ERROR (esp_http_client_set_username (clientHandle, username.c_str()));
-  return esp_http_client_set_password (clientHandle, password.c_str());
+  ESP_RETURN_ON_FALSE (clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
+  ESP_RETURN_ON_ERROR (esp_http_client_set_username (clientHandle, username.c_str()), TAG, "set username failed");
+  ESP_RETURN_ON_ERROR (esp_http_client_set_password (clientHandle, password.c_str()), TAG, "set password failed");
+  return ESP_OK;
 }
  
 //==============================================================================
 
 esp_err_t HttpClient::SetRequestHeader (const std::string& name, const std::string& value) {
   LockGuard lg (*this);
-  if (!clientHandle)
-    return ESP_ERR_INVALID_STATE;
-
-  return esp_http_client_set_header (clientHandle, name.c_str(), value.c_str());
+  ESP_RETURN_ON_FALSE (clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
+  ESP_RETURN_ON_ERROR (esp_http_client_set_header (clientHandle, name.c_str(), value.c_str()), TAG, "set header failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpClient::DeleteRequestHeader (const std::string& name) {
   LockGuard lg (*this);
-  if (!clientHandle)
-    return ESP_ERR_INVALID_STATE;
-
-  return esp_http_client_delete_header (clientHandle, name.c_str());
+  ESP_RETURN_ON_FALSE (clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
+  ESP_RETURN_ON_ERROR (esp_http_client_delete_header (clientHandle, name.c_str()), TAG, "delete header failed");
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -273,8 +281,7 @@ esp_err_t HttpClient::HandleResponse (esp_http_client_event_t* evt) {
     size_t headerNameSize = strlen (evt->header_key);
     size_t headerValueSize = strlen (evt->header_value);
 
-    if (headerDataEnd - (char*)headerBuffer->data + headerNameSize + headerValueSize + 2 > headerBuffer->size)
-      return ESP_ERR_INVALID_SIZE;
+    ESP_RETURN_ON_FALSE (headerDataEnd - (char*)headerBuffer->data + headerNameSize + headerValueSize + 2 <= headerBuffer->size, ESP_ERR_INVALID_SIZE, TAG, "header buffer is too small");
     memcpy (headerDataEnd, evt->header_key, headerNameSize);
     headerDataEnd += headerNameSize;
     *(headerDataEnd++) = ':';
