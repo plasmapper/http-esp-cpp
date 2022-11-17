@@ -261,7 +261,7 @@ esp_err_t HttpServer::HandleRequest (httpd_req_t* req) {
   esp_err_t err = server.HandleRequest (transaction);
   if (err != ESP_OK)
     transaction.WriteResponse (500);
-  ESP_RETURN_ON_ERROR (err, TAG, "handle request error");
+  ESP_RETURN_ON_ERROR (err, TAG, "handle request failed");
   return ESP_OK;
 }
 
@@ -289,7 +289,7 @@ esp_err_t HttpServer::Transaction::ReadRequestBody (void* dest, size_t size) {
       httpd_resp_send_408 (req);
       ESP_RETURN_ON_ERROR (ESP_ERR_TIMEOUT, TAG, "timeout");
     }
-    ESP_RETURN_ON_ERROR (ESP_FAIL, TAG, "request receive error"); 
+    ESP_RETURN_ON_ERROR (ESP_FAIL, TAG, "request receive failed"); 
   }
   return ESP_OK;
 }
@@ -301,8 +301,8 @@ esp_err_t HttpServer::Transaction::WriteResponse (uint16_t statusCode, const voi
   auto statusCodeIterator = httpStatusCodeMap.find (statusCode);
   if (statusCodeIterator != httpStatusCodeMap.end())
     status += statusCodeIterator->second;
-  ESP_RETURN_ON_ERROR (httpd_resp_set_status (req, status.c_str()), TAG, "set status error");
-  ESP_RETURN_ON_ERROR (httpd_resp_send (req, (char*)body, bodySize), TAG, "response send error");
+  ESP_RETURN_ON_ERROR (httpd_resp_set_status (req, status.c_str()), TAG, "set status failed");
+  ESP_RETURN_ON_ERROR (httpd_resp_send (req, (char*)body, bodySize), TAG, "response send failed");
   return ESP_OK;
 }
 
@@ -357,7 +357,7 @@ esp_err_t HttpServer::Transaction::SetResponseHeader (const std::string& name, c
   char* valueStr = responseHeaderDataEnd;
   memcpy (responseHeaderDataEnd, value.c_str(), value.size() + 1);
   responseHeaderDataEnd += value.size() + 1;
-  ESP_RETURN_ON_ERROR (httpd_resp_set_hdr (req, nameStr, valueStr), TAG, "set header error");
+  ESP_RETURN_ON_ERROR (httpd_resp_set_hdr (req, nameStr, valueStr), TAG, "set header failed");
   return ESP_OK;
 }
 

@@ -111,7 +111,7 @@ esp_err_t HttpClient::WriteRequestHeaders (HttpMethod method, const std::string&
   auto espMethod = httpMethodMap.find (method);
   ESP_RETURN_ON_FALSE (espMethod != httpMethodMap.end(), ESP_ERR_INVALID_ARG, TAG, "invalid HTTP method");
 
-  ESP_RETURN_ON_ERROR (esp_http_client_flush_response (clientHandle, NULL), TAG, "flush response error");
+  ESP_RETURN_ON_ERROR (esp_http_client_flush_response (clientHandle, NULL), TAG, "flush response failed");
   ESP_RETURN_ON_ERROR (esp_http_client_set_method (clientHandle, espMethod->second), TAG, "set method failed");
   ESP_RETURN_ON_ERROR (esp_http_client_set_url (clientHandle, uri.c_str()), TAG, "set URL failed");
   ESP_RETURN_ON_ERROR (esp_http_client_open (clientHandle, bodySize), TAG, "open failed");
