@@ -19,6 +19,7 @@ extern "C" void app_main(void) {
   ESP_ERROR_CHECK (wifi.Initialize());
   ESP_ERROR_CHECK (wifi.SetSsid (wifiSsid));
   ESP_ERROR_CHECK (wifi.SetPassword (wifiPassword));
+  ESP_ERROR_CHECK (wifi.EnableIpV4DhcpClient());
   ESP_ERROR_CHECK (wifi.Enable());
 
   while (!wifi.GetIpV4Address().u32)  

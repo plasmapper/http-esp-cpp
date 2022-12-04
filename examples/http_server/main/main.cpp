@@ -59,6 +59,7 @@ extern "C" void app_main(void) {
   httpServer.requestEvent.AddHandler (requestEventHandler, &RequestEventHandler::OnRequest);
   httpsServer.requestEvent.AddHandler (requestEventHandler, &RequestEventHandler::OnRequest);
 
+  wifi.EnableIpV4DhcpClient();
   wifi.Enable();
 
   while (1) {
