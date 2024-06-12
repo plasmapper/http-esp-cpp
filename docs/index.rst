@@ -3,6 +3,8 @@ HTTP/HTTPS Component
 
 .. |COMPONENT| replace:: http
 
+.. |VERSION| replace:: 1.0.0
+
 .. include:: ../../../installation.rst
 
 .. include:: ../../../sdkconfig_https.rst
