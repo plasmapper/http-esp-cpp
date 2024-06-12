@@ -27,8 +27,8 @@ Features
 
 Examples
 --------
-| `HTTP/HTTPS client <https://components.espressif.com/components/plasmapper/pl_http/versions/|VERSION|/examples/http_client>`_
-| `HTTP/HTTPS server <https://components.espressif.com/components/plasmapper/pl_http/versions/|VERSION|/examples/http_server>`_
+| `HTTP/HTTPS client <https://components.espressif.com/components/plasmapper/pl_http/versions/1.0.1/examples/http_client>`_
+| `HTTP/HTTPS server <https://components.espressif.com/components/plasmapper/pl_http/versions/1.0.1/examples/http_server>`_
   
 API reference
 -------------
