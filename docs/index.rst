@@ -3,7 +3,7 @@ HTTP/HTTPS Component
 
 .. |COMPONENT| replace:: http
 
-.. |VERSION| replace:: 1.0.0
+.. |VERSION| replace:: 1.0.1
 
 .. include:: ../../../installation.rst
 
@@ -27,8 +27,8 @@ Features
 
 Examples
 --------
-| `HTTP/HTTPS client <https://github.com/plasmapper/http-esp-cpp/tree/main/examples/http_client>`_
-| `HTTP/HTTPS server <https://github.com/plasmapper/http-esp-cpp/tree/main/examples/http_server>`_
+| `HTTP/HTTPS client <https://components.espressif.com/components/plasmapper/pl_http/versions/|VERSION|/examples/http_client>`_
+| `HTTP/HTTPS server <https://components.espressif.com/components/plasmapper/pl_http/versions/|VERSION|/examples/http_server>`_
   
 API reference
 -------------
