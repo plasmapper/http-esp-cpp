@@ -3,6 +3,8 @@ HTTP/HTTPS Component
 
 .. |COMPONENT| replace:: http
 
+.. |ESP_IDF_VERSION| replace:: 5.0
+   
 .. |VERSION| replace:: 1.0.1
 
 .. include:: ../../../installation.rst
