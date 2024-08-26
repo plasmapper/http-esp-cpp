@@ -34,35 +34,35 @@ public:
 
   Event<HttpServer, HttpServerTransaction&> requestEvent;
   
-  /// @brief Create an HTTP server with shared transaction buffer
+  /// @brief Creates an HTTP server with shared transaction buffer
   /// @param uriBuffer URI buffer
   /// @param headerBuffer header buffer
-  HttpServer (std::shared_ptr<Buffer> uriBuffer, std::shared_ptr<Buffer> headerBuffer);
+  HttpServer(std::shared_ptr<Buffer> uriBuffer, std::shared_ptr<Buffer> headerBuffer);
 
-  /// @brief Create an HTTP server and allocate transaction buffer
+  /// @brief Creates an HTTP server and allocate transaction buffer
   /// @param uriBufferSize URI buffer size
   /// @param headerBufferSize header buffer size
-  HttpServer (size_t uriBufferSize = defaultUriBufferSize, size_t headerBufferSize = defaultHeaderBufferSize);
+  HttpServer(size_t uriBufferSize = defaultUriBufferSize, size_t headerBufferSize = defaultHeaderBufferSize);
 
-  /// @brief Create an HTTPS server with shared transaction buffer
+  /// @brief Creates an HTTPS server with shared transaction buffer
   /// @param certificate certificate
   /// @param privateKey private key
   /// @param uriBuffer URI buffer
   /// @param headerBuffer header buffer
-  HttpServer (const char* certificate, const char* privateKey, std::shared_ptr<Buffer> uriBuffer, std::shared_ptr<Buffer> headerBuffer);
+  HttpServer(const char* certificate, const char* privateKey, std::shared_ptr<Buffer> uriBuffer, std::shared_ptr<Buffer> headerBuffer);
 
-  /// @brief Create an HTTPS server and allocate transaction buffer
+  /// @brief Creates an HTTPS server and allocate transaction buffer
   /// @param certificate certificate
   /// @param privateKey private key
   /// @param uriBufferSize URI buffer size
   /// @param headerBufferSize header buffer size
-  HttpServer (const char* certificate, const char* privateKey, size_t uriBufferSize = defaultUriBufferSize, size_t headerBufferSize = defaultHeaderBufferSize);
+  HttpServer(const char* certificate, const char* privateKey, size_t uriBufferSize = defaultUriBufferSize, size_t headerBufferSize = defaultHeaderBufferSize);
 
   ~HttpServer();
-  HttpServer (const HttpServer&) = delete;
-  HttpServer& operator= (const HttpServer&) = delete;
+  HttpServer(const HttpServer&) = delete;
+  HttpServer& operator=(const HttpServer&) = delete;
 
-  esp_err_t Lock (TickType_t timeout = portMAX_DELAY) override;
+  esp_err_t Lock(TickType_t timeout = portMAX_DELAY) override;
   esp_err_t Unlock() override;
 
   esp_err_t Enable() override;
@@ -71,32 +71,32 @@ public:
   bool IsEnabled() override;
 
   uint16_t GetPort() override;
-  esp_err_t SetPort (uint16_t port) override;
+  esp_err_t SetPort(uint16_t port) override;
 
   size_t GetMaxNumberOfClients() override;
-  esp_err_t SetMaxNumberOfClients (size_t maxNumberOfClients) override;
+  esp_err_t SetMaxNumberOfClients(size_t maxNumberOfClients) override;
 
-  /// @brief Get the read operation timeout 
+  /// @brief Gets the read operation timeout 
   /// @return timeout in FreeRTOS ticks
   TickType_t GetReadTimeout();
 
-  /// @brief Set the read operation timeout 
+  /// @brief Sets the read operation timeout 
   /// @param timeout timeout in FreeRTOS ticks
   /// @return error code
-  esp_err_t SetReadTimeout (TickType_t timeout);
+  esp_err_t SetReadTimeout(TickType_t timeout);
 
-  /// @brief Set the server task parameters
+  /// @brief Sets the server task parameters
   /// @param taskParameters task parameters
   /// @return error code
-  esp_err_t SetTaskParameters (const TaskParameters& taskParameters);
+  esp_err_t SetTaskParameters(const TaskParameters& taskParameters);
 
 protected:
-  /// @brief Handle the HTTP request
+  /// @brief Handles the HTTP request
   /// @param clientStream 
   /// @param request request
   /// @param response response
   /// @return error code
-  virtual esp_err_t HandleRequest (HttpServerTransaction& transaction) = 0;
+  virtual esp_err_t HandleRequest(HttpServerTransaction& transaction) = 0;
 
 private:
   Mutex mutex;
@@ -115,24 +115,24 @@ private:
   httpd_ssl_config_t serverConfig;
   httpd_handle_t serverHandle = NULL;
   
-  static esp_err_t HandleRequest (httpd_req_t* req);
+  static esp_err_t HandleRequest(httpd_req_t* req);
   esp_err_t RestartIfEnabled();
 
   class Transaction : public HttpServerTransaction {
   public:
-    Transaction (HttpServer& server, httpd_req_t* req);
+    Transaction(HttpServer& server, httpd_req_t* req);
 
-    esp_err_t ReadRequestBody (void* dest, size_t size) override;
+    esp_err_t ReadRequestBody(void* dest, size_t size) override;
     using HttpServerTransaction::WriteResponse;
-    esp_err_t WriteResponse (uint16_t statusCode, const void* body, size_t bodySize) override;
+    esp_err_t WriteResponse(uint16_t statusCode, const void* body, size_t bodySize) override;
 
     std::shared_ptr<NetworkStream> GetNetworkStream() override;
     HttpMethod GetRequestMethod() override;
     const char* GetRequestUri() override;
-    const char* GetRequestHeader (const std::string& name) override;
+    const char* GetRequestHeader(const std::string& name) override;
     size_t GetRequestBodySize() override;
 
-    esp_err_t SetResponseHeader (const std::string& name, const std::string& value) override;
+    esp_err_t SetResponseHeader(const std::string& name, const std::string& value) override;
 
   private:
     HttpServer& server;

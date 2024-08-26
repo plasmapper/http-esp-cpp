@@ -4,7 +4,7 @@
 
 //==============================================================================
 
-const TickType_t readTimeout = 3000 / portTICK_PERIOD_MS;
+const TickType_t readTimeout = 5000 / portTICK_PERIOD_MS;
 const std::string hostname = "httpbin.org";
 
 const std::vector<TestTransaction> testTransactions= {
@@ -34,65 +34,65 @@ static char responseBody[2000];
 
 //==============================================================================
 
-void TestClient (PL::HttpClient& client) {
-  TEST_ASSERT (client.Initialize() == ESP_OK);
+void TestClient(PL::HttpClient& client) {
+  TEST_ASSERT(client.Initialize() == ESP_OK);
 
-  TEST_ASSERT_EQUAL (PL::HttpClient::defaultReadTimeout, client.GetReadTimeout());
-  TEST_ASSERT (client.SetReadTimeout (readTimeout) == ESP_OK);
-  TEST_ASSERT_EQUAL (readTimeout, client.GetReadTimeout());
+  TEST_ASSERT_EQUAL(PL::HttpClient::defaultReadTimeout, client.GetReadTimeout());
+  TEST_ASSERT(client.SetReadTimeout(readTimeout) == ESP_OK);
+  TEST_ASSERT_EQUAL(readTimeout, client.GetReadTimeout());
 
   ushort responseStatusCode;
   size_t responseBodySize;
   for (auto& t : testTransactions) {
-    printf ("Test %s\n", t.name.c_str());
-    TEST_ASSERT (client.SetAuthScheme (t.authScheme) == ESP_OK);
-    TEST_ASSERT (client.SetAuthCredentials (t.username, t.password) == ESP_OK);
+    printf("Test %s\n", t.name.c_str());
+    TEST_ASSERT(client.SetAuthScheme(t.authScheme) == ESP_OK);
+    TEST_ASSERT(client.SetAuthCredentials(t.username, t.password) == ESP_OK);
 
     for (auto& h : t.requestHeaders)
-      TEST_ASSERT (client.SetRequestHeader (h.first, h.second) == ESP_OK);
+      TEST_ASSERT(client.SetRequestHeader(h.first, h.second) == ESP_OK);
 
-    TEST_ASSERT (client.WriteRequest (t.requestMethod, t.requestUri, t.requestBody) == ESP_OK);
-    TEST_ASSERT (client.ReadResponseHeaders (responseStatusCode, &responseBodySize) == ESP_OK); 
+    TEST_ASSERT(client.WriteRequest(t.requestMethod, t.requestUri, t.requestBody) == ESP_OK);
+    TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, &responseBodySize) == ESP_OK); 
     if (t.authScheme == PL::HttpAuthScheme::digest && responseStatusCode == 401) {
-      TEST_ASSERT (client.WriteRequest (t.requestMethod, t.requestUri, t.requestBody) == ESP_OK);
-      TEST_ASSERT (client.ReadResponseHeaders (responseStatusCode, &responseBodySize) == ESP_OK);
+      TEST_ASSERT(client.WriteRequest(t.requestMethod, t.requestUri, t.requestBody) == ESP_OK);
+      TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, &responseBodySize) == ESP_OK);
     }
-    TEST_ASSERT_EQUAL (t.responseStatusCode, responseStatusCode);
+    TEST_ASSERT_EQUAL(t.responseStatusCode, responseStatusCode);
   
     for (auto& h : t.responseHeaders) {
-      TEST_ASSERT (client.GetResponseHeader (h.first) != NULL);
-      TEST_ASSERT (client.GetResponseHeader (h.first) == h.second);
+      TEST_ASSERT(client.GetResponseHeader(h.first) != NULL);
+      TEST_ASSERT(client.GetResponseHeader(h.first) == h.second);
     }      
 
-    TEST_ASSERT (responseBodySize + 1 <= sizeof (responseBody));
-    TEST_ASSERT (client.ReadResponseBody (responseBody, responseBodySize) == ESP_OK);
+    TEST_ASSERT(responseBodySize + 1 <= sizeof(responseBody));
+    TEST_ASSERT(client.ReadResponseBody(responseBody, responseBodySize) == ESP_OK);
     responseBody[responseBodySize] = 0;
     
     for (auto& s : t.responseBodyStrings)
-      TEST_ASSERT (strstr (responseBody, s.c_str()) != NULL);
+      TEST_ASSERT(strstr(responseBody, s.c_str()) != NULL);
   }
 
-  printf ("Test delay\n");
-  TEST_ASSERT (client.WriteRequest (PL::HttpMethod::GET, "/delay/1") == ESP_OK);
-  TEST_ASSERT (client.ReadResponseHeaders (responseStatusCode, NULL) == ESP_OK);
-  TEST_ASSERT (client.WriteRequest (PL::HttpMethod::GET, "/delay/5") == ESP_OK);
-  TEST_ASSERT (client.ReadResponseHeaders (responseStatusCode, NULL) == ESP_FAIL);
+  printf("Test delay\n");
+  TEST_ASSERT(client.WriteRequest(PL::HttpMethod::GET, "/delay/1") == ESP_OK);
+  TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, NULL) == ESP_OK);
+  TEST_ASSERT(client.WriteRequest(PL::HttpMethod::GET, "/delay/5") == ESP_OK);
+  TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, NULL) == ESP_FAIL);
 
-  TEST_ASSERT (client.Disconnect() == ESP_OK);
+  TEST_ASSERT(client.Disconnect() == ESP_OK);
 }
 
 //==============================================================================
 
 void TestHttpClient() {
-  PL::HttpClient client (hostname);
-  TEST_ASSERT_EQUAL (PL::HttpClient::defaultHttpPort, client.GetPort());
-  TestClient (client);
+  PL::HttpClient client(hostname);
+  TEST_ASSERT_EQUAL(PL::HttpClient::defaultHttpPort, client.GetPort());
+  TestClient(client);
 }
 
 //==============================================================================
 
 void TestHttpsClient() {
-  PL::HttpClient client (hostname, esp_crt_bundle_attach);
-  TEST_ASSERT_EQUAL (PL::HttpClient::defaultHttpsPort, client.GetPort());
-  TestClient (client);
+  PL::HttpClient client(hostname, esp_crt_bundle_attach);
+  TEST_ASSERT_EQUAL(PL::HttpClient::defaultHttpsPort, client.GetPort());
+  TestClient(client);
 }

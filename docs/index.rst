@@ -3,9 +3,9 @@ HTTP/HTTPS Component
 
 .. |COMPONENT| replace:: http
 
-.. |ESP_IDF_VERSION| replace:: 5.0
+.. |ESP_IDF_VERSION| replace:: 5.3
    
-.. |VERSION| replace:: 1.0.1
+.. |VERSION| replace:: 1.0.2
 
 .. include:: ../../../installation.rst
 
@@ -27,10 +27,19 @@ Features
    :cpp:func:`PL::HttpServerTransaction::GetRequestBodySize` and :cpp:func:`PL::HttpServerTransaction::ReadRequestBody` should be used to analyze the request.
    :cpp:func:`PL::HttpServerTransaction::SetResponseHeader` and :cpp:func:`PL::HttpServerTransaction::WriteResponse` should be used to send the response.
 
+Thread safety
+-------------
+
+Class method thread safety is implemented by having the :cpp:class:`PL::Lockable` as a base class and creating the class object lock guard at the beginning of the methods.
+
+:cpp:func:`PL::HttpClient::ReadResponseHeaders` locks both the :cpp:class:`PL::HttpClient` and the header buffer objects for the duration of the transaction.
+
+:cpp:class:`PL::HttpServer` request handler locks the :cpp:class:`PL::HttpServer`, the URI buffer and the header buffer objects for the duration of the transaction. 
+
 Examples
 --------
-| `HTTP/HTTPS client <https://components.espressif.com/components/plasmapper/pl_http/versions/1.0.1/examples/http_client>`_
-| `HTTP/HTTPS server <https://components.espressif.com/components/plasmapper/pl_http/versions/1.0.1/examples/http_server>`_
+| `HTTP/HTTPS client <https://components.espressif.com/components/plasmapper/pl_http/versions/1.0.2/examples/http_client>`_
+| `HTTP/HTTPS server <https://components.espressif.com/components/plasmapper/pl_http/versions/1.0.2/examples/http_server>`_
   
 API reference
 -------------

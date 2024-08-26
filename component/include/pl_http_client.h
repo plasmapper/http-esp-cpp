@@ -22,137 +22,137 @@ public:
   /// @brief Default header buffer size
   static const size_t defaultHeaderBufferSize = 1024;
 
-  /// @brief Create an HTTP client
+  /// @brief Creates an HTTP client
   /// @param hostname hostname
   /// @param headerBuffer header buffer
-  HttpClient (const std::string& hostname, std::shared_ptr<Buffer> headerBuffer);
+  HttpClient(const std::string& hostname, std::shared_ptr<Buffer> headerBuffer);
 
-  /// @brief Create an HTTP client
+  /// @brief Creates an HTTP client
   /// @param hostname hostname
   /// @param headerBufferSize header buffer size
-  HttpClient (const std::string& hostname, size_t headerBufferSize = defaultHeaderBufferSize);
+  HttpClient(const std::string& hostname, size_t headerBufferSize = defaultHeaderBufferSize);
 
-  /// @brief Create an HTTPS client
+  /// @brief Creates an HTTPS client
   /// @param hostname hostname
   /// @param serverCertificate server certificate
   /// @param headerBuffer header buffer
-  HttpClient (const std::string& hostname, const char* serverCertificate, std::shared_ptr<Buffer> headerBuffer);
+  HttpClient(const std::string& hostname, const char* serverCertificate, std::shared_ptr<Buffer> headerBuffer);
 
-  /// @brief Create an HTTPS client
+  /// @brief Creates an HTTPS client
   /// @param hostname hostname
   /// @param serverCertificate server certificate
   /// @param headerBufferSize header buffer size
-  HttpClient (const std::string& hostname, const char* serverCertificate, size_t headerBufferSize = defaultHeaderBufferSize);
+  HttpClient(const std::string& hostname, const char* serverCertificate, size_t headerBufferSize = defaultHeaderBufferSize);
 
-  /// @brief Create an HTTPS client
+  /// @brief Creates an HTTPS client
   /// @param hostname hostname
   /// @param crt_bundle_attach function pointer to esp_crt_bundle_attach
   /// @param headerBuffer header buffer
-  HttpClient (const std::string& hostname, esp_err_t (*crt_bundle_attach)(void *conf), std::shared_ptr<Buffer> headerBuffer);
+  HttpClient(const std::string& hostname, esp_err_t (*crt_bundle_attach)(void *conf), std::shared_ptr<Buffer> headerBuffer);
 
-  /// @brief Create an HTTPS client
+  /// @brief Creates an HTTPS client
   /// @param hostname hostname
   /// @param crt_bundle_attach function pointer to esp_crt_bundle_attach
   /// @param headerBufferSize header buffer size
-  HttpClient (const std::string& hostname, esp_err_t (*crt_bundle_attach)(void *conf), size_t headerBufferSize = defaultHeaderBufferSize);
+  HttpClient(const std::string& hostname, esp_err_t (*crt_bundle_attach)(void *conf), size_t headerBufferSize = defaultHeaderBufferSize);
 
   ~HttpClient();
-  HttpClient (const HttpClient&) = delete;
-  HttpClient& operator= (const HttpClient&) = delete;
+  HttpClient(const HttpClient&) = delete;
+  HttpClient& operator=(const HttpClient&) = delete;
 
-  esp_err_t Lock (TickType_t timeout = portMAX_DELAY) override;
+  esp_err_t Lock(TickType_t timeout = portMAX_DELAY) override;
   esp_err_t Unlock() override;
 
-  /// @brief Initialize the client
+  /// @brief Initializes the client
   /// @return error code
   esp_err_t Initialize();
 
-  /// @brief Write the request headers
+  /// @brief Writes the request headers
   /// @param method HTTP method
   /// @param uri URI
   /// @param bodySize body size
   /// @return error code
-  esp_err_t WriteRequestHeaders (HttpMethod method, const std::string& uri, size_t bodySize);
+  esp_err_t WriteRequestHeaders(HttpMethod method, const std::string& uri, size_t bodySize);
 
-  /// @brief Write the request body
+  /// @brief Writes the request body
   /// @param src source
   /// @param size number of bytes to write
   /// @return error code
-  esp_err_t WriteRequestBody (const void* src, size_t size);
+  esp_err_t WriteRequestBody(const void* src, size_t size);
   
-  /// @brief Write the request
+  /// @brief Writes the request
   /// @param method HTTP method
   /// @param uri URI
   /// @param body body
   /// @return error code
-  esp_err_t WriteRequest (HttpMethod method, const std::string& uri, const std::string& body);
+  esp_err_t WriteRequest(HttpMethod method, const std::string& uri, const std::string& body);
 
-  /// @brief Write the request with an empty body
+  /// @brief Writes the request with an empty body
   /// @param method HTTP method
   /// @param uri URI
   /// @return 
-  esp_err_t WriteRequest (HttpMethod method, const std::string& uri);
+  esp_err_t WriteRequest(HttpMethod method, const std::string& uri);
 
-  /// @brief Read the response headers
+  /// @brief Reads the response headers
   /// @param statusCode status code
   /// @param bodySize body size
   /// @return error code
-  esp_err_t ReadResponseHeaders (ushort& statusCode, size_t* bodySize);
+  esp_err_t ReadResponseHeaders(ushort& statusCode, size_t* bodySize);
 
-  /// @brief Read the response body
+  /// @brief Reads the response body
   /// @param dest destination (can be NULL)
   /// @param size number of bytes to read
   /// @return error code
-  esp_err_t ReadResponseBody (void* dest, size_t size);
+  esp_err_t ReadResponseBody(void* dest, size_t size);
 
-  /// @brief Disconnect from the server
+  /// @brief Disconnects from the server
   /// @return error code
   esp_err_t Disconnect();
 
-  /// @brief Get the remote port
+  /// @brief Gets the remote port
   /// @return port
   uint16_t GetPort();
 
-  /// @brief Set the remote port
+  /// @brief Sets the remote port
   /// @param port port
   /// @return error code
-  esp_err_t SetPort (uint16_t port);
+  esp_err_t SetPort(uint16_t port);
 
-  /// @brief Get the read operation timeout 
+  /// @brief Gets the read operation timeout 
   /// @return timeout in FreeRTOS ticks
   TickType_t GetReadTimeout();
 
-  /// @brief Set the read operation timeout 
+  /// @brief Sets the read operation timeout 
   /// @param timeout timeout in FreeRTOS ticks
   /// @return error code
-  esp_err_t SetReadTimeout (TickType_t timeout);
+  esp_err_t SetReadTimeout(TickType_t timeout);
 
-  /// @brief Set the request authentication scheme
+  /// @brief Sets the request authentication scheme
   /// @param scheme authentication scheme
   /// @return error code
-  esp_err_t SetAuthScheme (HttpAuthScheme scheme);
+  esp_err_t SetAuthScheme(HttpAuthScheme scheme);
 
-  /// @brief Set the request authentication credentials
+  /// @brief Sets the request authentication credentials
   /// @param username username
   /// @param password password
   /// @return error code
-  esp_err_t SetAuthCredentials (const std::string& username, const std::string& password);
+  esp_err_t SetAuthCredentials(const std::string& username, const std::string& password);
 
-  /// @brief Set the request header
+  /// @brief Sets the request header
   /// @param name header name
   /// @param value header value
   /// @return error code
-  esp_err_t SetRequestHeader (const std::string& name, const std::string& value);
+  esp_err_t SetRequestHeader(const std::string& name, const std::string& value);
 
-  /// @brief Delete the request header
+  /// @brief Deletes the request header
   /// @param name header name
   /// @return error code
-  esp_err_t DeleteRequestHeader (const std::string& name);
+  esp_err_t DeleteRequestHeader(const std::string& name);
 
-  /// @brief Get the response header value
+  /// @brief Gets the response header value
   /// @param name header name
   /// @return header value (NULL if no such header in the request)
-  const char* GetResponseHeader (const std::string& name);
+  const char* GetResponseHeader(const std::string& name);
 
 private:
   Mutex mutex;
@@ -163,7 +163,7 @@ private:
   esp_http_client_config_t clientConfig = {};
   esp_http_client_handle_t clientHandle = NULL;
 
-  static esp_err_t HandleResponse (esp_http_client_event_t* evt);
+  static esp_err_t HandleResponse(esp_http_client_event_t* evt);
 };
 
 //==============================================================================

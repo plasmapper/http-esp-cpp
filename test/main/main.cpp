@@ -13,22 +13,22 @@ const std::string wifiPassword = CONFIG_TEST_WIFI_PASSWORD;
 //==============================================================================
 
 extern "C" void app_main(void) {
-  ESP_ERROR_CHECK (esp_event_loop_create_default());
-  ESP_ERROR_CHECK (esp_netif_init());
+  ESP_ERROR_CHECK(esp_event_loop_create_default());
+  ESP_ERROR_CHECK(esp_netif_init());
 
-  ESP_ERROR_CHECK (wifi.Initialize());
-  ESP_ERROR_CHECK (wifi.SetSsid (wifiSsid));
-  ESP_ERROR_CHECK (wifi.SetPassword (wifiPassword));
-  ESP_ERROR_CHECK (wifi.EnableIpV4DhcpClient());
-  ESP_ERROR_CHECK (wifi.Enable());
+  ESP_ERROR_CHECK(wifi.Initialize());
+  ESP_ERROR_CHECK(wifi.SetSsid(wifiSsid));
+  ESP_ERROR_CHECK(wifi.SetPassword(wifiPassword));
+  ESP_ERROR_CHECK(wifi.EnableIpV4DhcpClient());
+  ESP_ERROR_CHECK(wifi.Enable());
 
   while (!wifi.GetIpV4Address().u32)  
-    vTaskDelay (1);
+    vTaskDelay(1);
 
   UNITY_BEGIN();
-  RUN_TEST (TestHttpClient);
-  RUN_TEST (TestHttpsClient);
-  RUN_TEST (TestHttpServer);
-  RUN_TEST (TestHttpsServer);
+  RUN_TEST(TestHttpClient);
+  RUN_TEST(TestHttpsClient);
+  RUN_TEST(TestHttpServer);
+  RUN_TEST(TestHttpsServer);
   UNITY_END();
 }

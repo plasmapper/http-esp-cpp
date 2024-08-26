@@ -25,61 +25,61 @@ static char responseBody[100];
 
 //==============================================================================
 
-void TestServer (PL::HttpServer& server, PL::HttpClient& client) {
-  TEST_ASSERT (client.Initialize() == ESP_OK);
+void TestServer(PL::HttpServer& server, PL::HttpClient& client) {
+  TEST_ASSERT(client.Initialize() == ESP_OK);
 
-  TEST_ASSERT_EQUAL (PL::HttpServer::defaultReadTimeout, server.GetReadTimeout());
-  TEST_ASSERT (server.SetReadTimeout (readTimeout) == ESP_OK);
-  TEST_ASSERT_EQUAL (readTimeout, server.GetReadTimeout());
+  TEST_ASSERT_EQUAL(PL::HttpServer::defaultReadTimeout, server.GetReadTimeout());
+  TEST_ASSERT(server.SetReadTimeout(readTimeout) == ESP_OK);
+  TEST_ASSERT_EQUAL(readTimeout, server.GetReadTimeout());
   
-  TEST_ASSERT_EQUAL (PL::HttpClient::defaultReadTimeout, client.GetReadTimeout());
-  TEST_ASSERT (client.SetReadTimeout (readTimeout) == ESP_OK);
-  TEST_ASSERT_EQUAL (readTimeout, client.GetReadTimeout());
+  TEST_ASSERT_EQUAL(PL::HttpClient::defaultReadTimeout, client.GetReadTimeout());
+  TEST_ASSERT(client.SetReadTimeout(readTimeout) == ESP_OK);
+  TEST_ASSERT_EQUAL(readTimeout, client.GetReadTimeout());
 
   for (int p = 0; p < 2; p++) {
-    TEST_ASSERT (server.SetPort (port) == ESP_OK);
-    TEST_ASSERT (client.SetPort (port) == ESP_OK);
-    TEST_ASSERT_EQUAL (port, server.GetPort());
-    TEST_ASSERT_EQUAL (port, client.GetPort());
+    TEST_ASSERT(server.SetPort(port) == ESP_OK);
+    TEST_ASSERT(client.SetPort(port) == ESP_OK);
+    TEST_ASSERT_EQUAL(port, server.GetPort());
+    TEST_ASSERT_EQUAL(port, client.GetPort());
 
-    TEST_ASSERT (server.SetMaxNumberOfClients (maxNumberOfClients) == ESP_OK);
-    TEST_ASSERT_EQUAL (maxNumberOfClients, server.GetMaxNumberOfClients());
-    TEST_ASSERT (server.Enable() == ESP_OK);
-    TEST_ASSERT (server.IsEnabled());
+    TEST_ASSERT(server.SetMaxNumberOfClients(maxNumberOfClients) == ESP_OK);
+    TEST_ASSERT_EQUAL(maxNumberOfClients, server.GetMaxNumberOfClients());
+    TEST_ASSERT(server.Enable() == ESP_OK);
+    TEST_ASSERT(server.IsEnabled());
 
     for (auto& header : requestHeaders) {
-      TEST_ASSERT (client.SetRequestHeader (header.first, header.second) == ESP_OK);
+      TEST_ASSERT(client.SetRequestHeader(header.first, header.second) == ESP_OK);
     }
-    TEST_ASSERT (client.WriteRequest (correctRequestMethod, correctRequestUri, requestBody) == ESP_OK);
-    TEST_ASSERT (client.ReadResponseHeaders (responseStatusCode, &responseBodySize) == ESP_OK);
-    TEST_ASSERT_EQUAL (200, responseStatusCode);
+    TEST_ASSERT(client.WriteRequest(correctRequestMethod, correctRequestUri, requestBody) == ESP_OK);
+    TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, &responseBodySize) == ESP_OK);
+    TEST_ASSERT_EQUAL(200, responseStatusCode);
     for (auto& header : requestHeaders) {
-      TEST_ASSERT (client.GetResponseHeader (header.first) != NULL);
-      TEST_ASSERT (client.GetResponseHeader (header.first) == header.second);
+      TEST_ASSERT(client.GetResponseHeader(header.first) != NULL);
+      TEST_ASSERT(client.GetResponseHeader(header.first) == header.second);
     }
-    TEST_ASSERT_EQUAL (requestBody.size(), responseBodySize);
-    TEST_ASSERT (client.ReadResponseBody (responseBody, responseBodySize) == ESP_OK);
+    TEST_ASSERT_EQUAL(requestBody.size(), responseBodySize);
+    TEST_ASSERT(client.ReadResponseBody(responseBody, responseBodySize) == ESP_OK);
     responseBody[responseBodySize] = 0;
-    TEST_ASSERT (requestBody == responseBody); 
+    TEST_ASSERT(requestBody == responseBody); 
 
-    TEST_ASSERT (client.WriteRequest (incorrectRequestMethod, correctRequestUri) == ESP_OK);
-    TEST_ASSERT (client.ReadResponseHeaders (responseStatusCode, NULL) == ESP_OK); 
-    TEST_ASSERT_EQUAL (405, responseStatusCode);
+    TEST_ASSERT(client.WriteRequest(incorrectRequestMethod, correctRequestUri) == ESP_OK);
+    TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, NULL) == ESP_OK); 
+    TEST_ASSERT_EQUAL(405, responseStatusCode);
 
-    TEST_ASSERT (client.WriteRequest (correctRequestMethod, incorrectRequestUri) == ESP_OK);
-    TEST_ASSERT (client.ReadResponseHeaders (responseStatusCode, NULL) == ESP_OK);
-    TEST_ASSERT_EQUAL (404, responseStatusCode);
+    TEST_ASSERT(client.WriteRequest(correctRequestMethod, incorrectRequestUri) == ESP_OK);
+    TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, NULL) == ESP_OK);
+    TEST_ASSERT_EQUAL(404, responseStatusCode);
 
     port++;
   }
 
-  TEST_ASSERT (server.Disable() == ESP_OK);
-  TEST_ASSERT (!server.IsEnabled());
+  TEST_ASSERT(server.Disable() == ESP_OK);
+  TEST_ASSERT(!server.IsEnabled());
 }
 
 //==============================================================================
 
-esp_err_t HttpServer::HandleRequest (PL::HttpServerTransaction& transaction) {
+esp_err_t HttpServer::HandleRequest(PL::HttpServerTransaction& transaction) {
   char requestBody[100];
   size_t requestBodySize = transaction.GetRequestBodySize();
 
@@ -87,19 +87,19 @@ esp_err_t HttpServer::HandleRequest (PL::HttpServerTransaction& transaction) {
     case PL::HttpMethod::GET:
       if (transaction.GetRequestUri() == correctRequestUri) {
         for (auto& header : requestHeaders) {
-          if (auto value = transaction.GetRequestHeader (header.first))
-            transaction.SetResponseHeader (header.first, value);
+          if (auto value = transaction.GetRequestHeader(header.first))
+            transaction.SetResponseHeader(header.first, value);
         }
-        if (requestBodySize <= sizeof (requestBody)) {
-          transaction.ReadRequestBody (requestBody, requestBodySize);
-          return transaction.WriteResponse (200, requestBody, requestBodySize);
+        if (requestBodySize <= sizeof(requestBody)) {
+          transaction.ReadRequestBody(requestBody, requestBodySize);
+          return transaction.WriteResponse(200, requestBody, requestBodySize);
         }
-        return transaction.WriteResponse (413);
+        return transaction.WriteResponse(413);
       }
       else
-        return transaction.WriteResponse (404);
+        return transaction.WriteResponse(404);
     default:
-      return transaction.WriteResponse (405);
+      return transaction.WriteResponse(405);
   }
 }
 
@@ -107,16 +107,16 @@ esp_err_t HttpServer::HandleRequest (PL::HttpServerTransaction& transaction) {
 
 void TestHttpServer() {
   HttpServer server;
-  PL::HttpClient client (host);
-  TEST_ASSERT_EQUAL (PL::HttpClient::defaultHttpPort, server.GetPort());
-  TestServer (server, client);
+  PL::HttpClient client(host);
+  TEST_ASSERT_EQUAL(PL::HttpClient::defaultHttpPort, server.GetPort());
+  TestServer(server, client);
 }
 
 //==============================================================================
 
 void TestHttpsServer() {
-  HttpServer server (certificate, privateKey);
-  PL::HttpClient client (host, certificate);
-  TEST_ASSERT_EQUAL (PL::HttpClient::defaultHttpsPort, server.GetPort());
-  TestServer (server, client);
+  HttpServer server(certificate, privateKey);
+  PL::HttpClient client(host, certificate);
+  TEST_ASSERT_EQUAL(PL::HttpClient::defaultHttpsPort, server.GetPort());
+  TestServer(server, client);
 }

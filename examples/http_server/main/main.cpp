@@ -8,22 +8,22 @@ public:
   using PL::HttpServer::HttpServer;
 
 protected:
-  esp_err_t HandleRequest (PL::HttpServerTransaction& transaction) override;
+  esp_err_t HandleRequest(PL::HttpServerTransaction& transaction) override;
 };
 
 //==============================================================================
 
 class WiFiGotIpEventHandler {
 public:
-  void OnGotIpV4Address (PL::NetworkInterface& wifi);
-  void OnGotIpV6Address (PL::NetworkInterface& wifi);
+  void OnGotIpV4Address(PL::NetworkInterface& wifi);
+  void OnGotIpV6Address(PL::NetworkInterface& wifi);
 };
 
 //==============================================================================
 
 class RequestEventHandler {
 public:
-  void OnRequest (PL::HttpServer& server, PL::HttpServerTransaction& transaction);
+  void OnRequest(PL::HttpServer& server, PL::HttpServerTransaction& transaction);
 };
 
 //==============================================================================
@@ -36,11 +36,11 @@ auto wiFiGotIpEventHandler = std::make_shared<WiFiGotIpEventHandler>();
 auto uriBuffer = std::make_shared<PL::Buffer>(512);
 auto headerBuffer = std::make_shared<PL::Buffer>(1024);
 
-HttpServer httpServer (uriBuffer, headerBuffer);
+HttpServer httpServer(uriBuffer, headerBuffer);
 
 extern const char certificate[] asm("_binary_cert_pem_start");
 extern const char privateKey[] asm("_binary_key_pem_start");
-HttpServer httpsServer (certificate, privateKey, uriBuffer, headerBuffer);
+HttpServer httpsServer(certificate, privateKey, uriBuffer, headerBuffer);
 
 auto requestEventHandler = std::make_shared<RequestEventHandler>();
 
@@ -51,57 +51,57 @@ extern "C" void app_main(void) {
   esp_netif_init();
 
   wifi.Initialize();
-  wifi.SetSsid (wifiSsid);
-  wifi.SetPassword (wifiPassword);
-  wifi.gotIpV4AddressEvent.AddHandler (wiFiGotIpEventHandler, &WiFiGotIpEventHandler::OnGotIpV4Address);
-  wifi.gotIpV6AddressEvent.AddHandler (wiFiGotIpEventHandler, &WiFiGotIpEventHandler::OnGotIpV6Address);
+  wifi.SetSsid(wifiSsid);
+  wifi.SetPassword(wifiPassword);
+  wifi.gotIpV4AddressEvent.AddHandler(wiFiGotIpEventHandler, &WiFiGotIpEventHandler::OnGotIpV4Address);
+  wifi.gotIpV6AddressEvent.AddHandler(wiFiGotIpEventHandler, &WiFiGotIpEventHandler::OnGotIpV6Address);
 
-  httpServer.requestEvent.AddHandler (requestEventHandler, &RequestEventHandler::OnRequest);
-  httpsServer.requestEvent.AddHandler (requestEventHandler, &RequestEventHandler::OnRequest);
+  httpServer.requestEvent.AddHandler(requestEventHandler, &RequestEventHandler::OnRequest);
+  httpsServer.requestEvent.AddHandler(requestEventHandler, &RequestEventHandler::OnRequest);
 
   wifi.EnableIpV4DhcpClient();
   wifi.Enable();
 
   while (1) {
-    vTaskDelay (1);
+    vTaskDelay(1);
   }
 }
 
 //==============================================================================
 
-esp_err_t HttpServer::HandleRequest (PL::HttpServerTransaction& transaction) {
+esp_err_t HttpServer::HandleRequest(PL::HttpServerTransaction& transaction) {
   switch (transaction.GetRequestMethod()) {
     case PL::HttpMethod::GET:
-      return transaction.WriteResponse (transaction.GetRequestUri());
+      return transaction.WriteResponse(transaction.GetRequestUri());
     default:
-      return transaction.WriteResponse (405);
+      return transaction.WriteResponse(405);
   }
 }
 
 //==============================================================================
 
-void WiFiGotIpEventHandler::OnGotIpV4Address (PL::NetworkInterface& wifi) {
+void WiFiGotIpEventHandler::OnGotIpV4Address(PL::NetworkInterface& wifi) {
   if (httpServer.Enable() == ESP_OK)
-    printf ("Listening (address: %s, port: %d)\n", wifi.GetIpV4Address().ToString().c_str(), httpServer.GetPort());
+    printf("Listening (address: %s, port: %d)\n", wifi.GetIpV4Address().ToString().c_str(), httpServer.GetPort());
   if (httpsServer.Enable() == ESP_OK)
-    printf ("Listening (address: %s, port: %d)\n", wifi.GetIpV4Address().ToString().c_str(), httpsServer.GetPort());
+    printf("Listening (address: %s, port: %d)\n", wifi.GetIpV4Address().ToString().c_str(), httpsServer.GetPort());
 }
 
 //==============================================================================
 
-void WiFiGotIpEventHandler::OnGotIpV6Address (PL::NetworkInterface& wifi) {
+void WiFiGotIpEventHandler::OnGotIpV6Address(PL::NetworkInterface& wifi) {
   if (httpServer.Enable() == ESP_OK)
-    printf ("Listening (address: %s, port: %d)\n", wifi.GetIpV6LinkLocalAddress().ToString().c_str(), httpServer.GetPort());
+    printf("Listening (address: %s, port: %d)\n", wifi.GetIpV6LinkLocalAddress().ToString().c_str(), httpServer.GetPort());
   if (httpsServer.Enable() == ESP_OK)
-    printf ("Listening (address: %s, port: %d)\n", wifi.GetIpV6LinkLocalAddress().ToString().c_str(), httpsServer.GetPort());
+    printf("Listening (address: %s, port: %d)\n", wifi.GetIpV6LinkLocalAddress().ToString().c_str(), httpsServer.GetPort());
 }
 
 //==============================================================================
 
-void RequestEventHandler::OnRequest (PL::HttpServer& server, PL::HttpServerTransaction& transaction) {
-  printf ("%s request from %s\n", &server == &httpServer ? "HTTP" : "HTTPS", transaction.GetNetworkStream()->GetRemoteEndpoint().address.ToString().c_str());
-  printf ("URI: %s\n", transaction.GetRequestUri());
-  if (auto host = transaction.GetRequestHeader ("Host"))
-    printf ("Host: %s\n", host);
-  printf ("\n");
+void RequestEventHandler::OnRequest(PL::HttpServer& server, PL::HttpServerTransaction& transaction) {
+  printf("%s request from %s\n", &server == &httpServer ? "HTTP" : "HTTPS", transaction.GetNetworkStream()->GetRemoteEndpoint().address.ToString().c_str());
+  printf("URI: %s\n", transaction.GetRequestUri());
+  if (auto host = transaction.GetRequestHeader("Host"))
+    printf("Host: %s\n", host);
+  printf("\n");
 }
