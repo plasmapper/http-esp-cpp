@@ -5,7 +5,7 @@ HTTP/HTTPS Component
 
 .. |ESP_IDF_VERSION| replace:: 5.3
    
-.. |VERSION| replace:: 1.0.2
+.. |VERSION| replace:: 1.1.0
 
 .. include:: ../../../installation.rst
 
@@ -38,8 +38,8 @@ Class method thread safety is implemented by having the :cpp:class:`PL::Lockable
 
 Examples
 --------
-| `HTTP/HTTPS client <https://components.espressif.com/components/plasmapper/pl_http/versions/1.0.2/examples/http_client>`_
-| `HTTP/HTTPS server <https://components.espressif.com/components/plasmapper/pl_http/versions/1.0.2/examples/http_server>`_
+| `HTTP/HTTPS client <https://components.espressif.com/components/plasmapper/pl_http/versions/1.1.0/examples/http_client>`_
+| `HTTP/HTTPS server <https://components.espressif.com/components/plasmapper/pl_http/versions/1.1.0/examples/http_server>`_
   
 API reference
 -------------
