@@ -80,12 +80,9 @@ HttpServer::~HttpServer() {
 
 esp_err_t HttpServer::Lock(TickType_t timeout) {
   esp_err_t error = mutex.Lock(timeout);
-  if (error == ESP_OK)
-    return ESP_OK;
-  if (error == ESP_ERR_TIMEOUT && timeout == 0)
-    return ESP_ERR_TIMEOUT;
-  ESP_RETURN_ON_ERROR(error, TAG, "mutex lock failed");
-  return ESP_OK;
+  if (error != ESP_OK && (error != ESP_ERR_TIMEOUT || timeout != 0))
+    ESP_LOGE(TAG, "mutex lock failed");
+  return error;
 }
 
 //==============================================================================
