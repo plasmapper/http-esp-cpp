@@ -18,19 +18,19 @@ public:
   /// @brief Default HTTPS server name
   static const std::string defaultHttpsName;
   /// @brief Default HTTP port
-  static const uint16_t defaultHttpPort = 80;
+  static constexpr uint16_t defaultHttpPort = 80;
   /// @brief Default HTTPS port
-  static const uint16_t defaultHttpsPort = 443;
+  static constexpr uint16_t defaultHttpsPort = 443;
   /// @brief Default maximum number of server clients
-  static const int defaultMaxNumberOfClients = 1;
+  static constexpr int defaultMaxNumberOfClients = 1;
   /// @brief Default read operation timeout in FreeRTOS ticks
-  static const TickType_t defaultReadTimeout = 5000 / portTICK_PERIOD_MS;
+  static constexpr TickType_t defaultReadTimeout = 5000 / portTICK_PERIOD_MS;
   /// @brief Default server task parameters
   static const TaskParameters defaultTaskParameters;
   /// @brief Default URI buffer size
-  static const size_t defaultUriBufferSize = 512;
+  static constexpr size_t defaultUriBufferSize = 512;
   /// @brief Default header buffer size
-  static const size_t defaultHeaderBufferSize = 1024;
+  static constexpr size_t defaultHeaderBufferSize = 1024;
 
   Event<HttpServer, HttpServerTransaction&> requestEvent;
   

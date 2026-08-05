@@ -14,13 +14,13 @@ namespace PL {
 class HttpClient : public Lockable {
 public:
   /// @brief Default HTTP port
-  static const uint16_t defaultHttpPort = 80;
+  static constexpr uint16_t defaultHttpPort = 80;
   /// @brief Default HTTPS port
-  static const uint16_t defaultHttpsPort = 443;
+  static constexpr uint16_t defaultHttpsPort = 443;
   /// @brief Default read operation timeout in FreeRTOS ticks
-  static const TickType_t defaultReadTimeout = 5000 / portTICK_PERIOD_MS;
+  static constexpr TickType_t defaultReadTimeout = 5000 / portTICK_PERIOD_MS;
   /// @brief Default header buffer size
-  static const size_t defaultHeaderBufferSize = 1024;
+  static constexpr size_t defaultHeaderBufferSize = 1024;
 
   /// @brief Creates an HTTP client
   /// @param hostname hostname
