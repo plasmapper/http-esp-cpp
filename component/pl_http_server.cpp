@@ -170,7 +170,7 @@ esp_err_t HttpServer::SetPort(uint16_t port) {
 
 size_t HttpServer::GetMaxNumberOfClients() {
   LockGuard lg(*this);
-  return maxNumberOfClients;;
+  return maxNumberOfClients;
 }
 
 //==============================================================================

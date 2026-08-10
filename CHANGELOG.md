@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HttpServer::maxNumberOfClients type mismatch with NetworkServer interface.
 - HttpServer::Disable leaving the server half-stopped when unregistering the URI handler fails.
 - HttpClient::SetPort client cleanup.
+- HttpClient::GetResponseHeader out-of-bounds pointer arithmetic.
 
 ## [1.1.0] - 2024-08-26
 ### Changed
