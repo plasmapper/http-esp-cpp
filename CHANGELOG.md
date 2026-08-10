@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HttpServer::Transaction::ReadRequestBody not looping on partial reads.
 - HttpClient::Disconnect missing lock and initialization check.
 - HttpClient::GetResponseHeader missing shared header buffer lock.
+- HttpServer::maxNumberOfClients type mismatch with NetworkServer interface.
 
 ## [1.1.0] - 2024-08-26
 ### Changed

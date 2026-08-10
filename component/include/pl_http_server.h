@@ -22,7 +22,7 @@ public:
   /// @brief Default HTTPS port
   static constexpr uint16_t defaultHttpsPort = 443;
   /// @brief Default maximum number of server clients
-  static constexpr int defaultMaxNumberOfClients = 1;
+  static constexpr size_t defaultMaxNumberOfClients = 1;
   /// @brief Default read operation timeout in FreeRTOS ticks
   static constexpr TickType_t defaultReadTimeout = 5000 / portTICK_PERIOD_MS;
   /// @brief Default server task parameters
@@ -96,7 +96,7 @@ private:
   Mutex mutex;
   bool enabled = false;
   uint16_t port;
-  int maxNumberOfClients = defaultMaxNumberOfClients;
+  size_t maxNumberOfClients = defaultMaxNumberOfClients;
   TickType_t readTimeout = defaultReadTimeout;
   TaskParameters taskParameters = defaultTaskParameters;
   std::shared_ptr<Buffer> headerBuffer;
