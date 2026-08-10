@@ -257,7 +257,7 @@ esp_err_t HttpClient::DeleteRequestHeader(const std::string& name) {
 //==============================================================================
 
 esp_err_t HttpClient::GetResponseHeader(const std::string& name, std::string& value) {
-  LockGuard lg(*this);
+  LockGuard lg(*this, *headerBuffer);
   char* end = headerDataEnd - name.size() - 2;
   for (char* ptr = (char*)headerBuffer->data; ptr < end; ) {
     if (strncasecmp(ptr, name.c_str(), name.size()) == 0 && *(ptr + name.size()) == ':') {
