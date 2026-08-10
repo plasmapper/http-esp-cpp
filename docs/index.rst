@@ -5,7 +5,7 @@ HTTP/HTTPS Component
 
 .. |ESP_IDF_VERSION| replace:: 5.3
    
-.. |VERSION| replace:: 1.1.0
+.. |VERSION| replace:: 2.0.0
 
 .. include:: ../../../installation.rst
 
@@ -32,14 +32,12 @@ Thread safety
 
 Class method thread safety is implemented by having the :cpp:class:`PL::Lockable` as a base class and creating the class object lock guard at the beginning of the methods.
 
-:cpp:func:`PL::HttpClient::ReadResponseHeaders` locks both the :cpp:class:`PL::HttpClient` and the header buffer objects for the duration of the transaction.
-
-:cpp:class:`PL::HttpServer` request handler locks the :cpp:class:`PL::HttpServer`, the URI buffer and the header buffer objects for the duration of the transaction. 
+:cpp:class:`PL::HttpServer` request handler locks the :cpp:class:`PL::HttpServer` and the header buffer objects for the duration of the transaction.
 
 Examples
 --------
-| `HTTP/HTTPS client <https://components.espressif.com/components/plasmapper/pl_http/versions/1.1.0/examples/http_client>`_
-| `HTTP/HTTPS server <https://components.espressif.com/components/plasmapper/pl_http/versions/1.1.0/examples/http_server>`_
+| `HTTP/HTTPS client <https://components.espressif.com/components/plasmapper/pl_http/versions/2.0.0/examples/http_client>`_
+| `HTTP/HTTPS server <https://components.espressif.com/components/plasmapper/pl_http/versions/2.0.0/examples/http_server>`_
   
 API reference
 -------------

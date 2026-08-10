@@ -33,14 +33,13 @@ const std::string wifiSsid = CONFIG_EXAMPLE_WIFI_SSID;
 const std::string wifiPassword = CONFIG_EXAMPLE_WIFI_PASSWORD;
 auto wiFiGotIpEventHandler = std::make_shared<WiFiGotIpEventHandler>();
 
-auto uriBuffer = std::make_shared<PL::Buffer>(512);
 auto headerBuffer = std::make_shared<PL::Buffer>(1024);
 
-HttpServer httpServer(uriBuffer, headerBuffer);
+HttpServer httpServer(headerBuffer);
 
 extern const char certificate[] asm("_binary_cert_pem_start");
 extern const char privateKey[] asm("_binary_key_pem_start");
-HttpServer httpsServer(certificate, privateKey, uriBuffer, headerBuffer);
+HttpServer httpsServer(certificate, privateKey, headerBuffer);
 
 auto requestEventHandler = std::make_shared<RequestEventHandler>();
 
@@ -70,9 +69,12 @@ extern "C" void app_main(void) {
 //==============================================================================
 
 esp_err_t HttpServer::HandleRequest(PL::HttpServerTransaction& transaction) {
+  std::string requestUri;
+
   switch (transaction.GetRequestMethod()) {
     case PL::HttpMethod::GET:
-      return transaction.WriteResponse(transaction.GetRequestUri());
+      transaction.GetRequestUri(requestUri);
+      return transaction.WriteResponse(requestUri);
     default:
       return transaction.WriteResponse(405);
   }
@@ -100,8 +102,11 @@ void WiFiGotIpEventHandler::OnGotIpV6Address(PL::NetworkInterface& wifi) {
 
 void RequestEventHandler::OnRequest(PL::HttpServer& server, PL::HttpServerTransaction& transaction) {
   printf("%s request from %s\n", &server == &httpServer ? "HTTP" : "HTTPS", transaction.GetNetworkStream()->GetRemoteEndpoint().address.ToString().c_str());
-  printf("URI: %s\n", transaction.GetRequestUri());
-  if (auto host = transaction.GetRequestHeader("Host"))
-    printf("Host: %s\n", host);
+  std::string requestUri;
+  transaction.GetRequestUri(requestUri);
+  printf("URI: %s\n", requestUri.c_str());
+  std::string host;
+  if (transaction.GetRequestHeader("Host", host) == ESP_OK)
+    printf("Host: %s\n", host.c_str());
   printf("\n");
 }

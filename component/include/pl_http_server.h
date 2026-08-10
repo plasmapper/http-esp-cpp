@@ -86,9 +86,7 @@ public:
 
 protected:
   /// @brief Handles the HTTP request
-  /// @param clientStream 
-  /// @param request request
-  /// @param response response
+  /// @param transaction transaction 
   /// @return error code
   virtual esp_err_t HandleRequest(HttpServerTransaction& transaction) = 0;
 
@@ -125,6 +123,8 @@ private:
     size_t GetRequestBodySize() override;
 
     esp_err_t SetResponseHeader(const std::string& name, const std::string& value) override;
+
+    bool IsResponseWritten();
 
   private:
     HttpServer& server;

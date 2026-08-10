@@ -218,7 +218,7 @@ esp_err_t HttpServer::HandleRequest(httpd_req_t* req) {
 
   server.requestEvent.Generate(transaction);
   esp_err_t err = server.HandleRequest(transaction);
-  if (err != ESP_OK)
+  if (err != ESP_OK && !transaction.IsResponseWritten())
     transaction.WriteResponse(500);
   ESP_RETURN_ON_ERROR(err, TAG, "handle request failed");
   return ESP_OK;
@@ -299,6 +299,7 @@ HttpMethod HttpServer::Transaction::GetRequestMethod() {
 
 esp_err_t HttpServer::Transaction::GetRequestUri(std::string& uri) {
   ESP_RETURN_ON_FALSE(!responseWritten, ESP_ERR_INVALID_STATE, TAG, "response has already been sent");
+
   uri = req->uri;
   return ESP_OK;
 }
@@ -307,6 +308,7 @@ esp_err_t HttpServer::Transaction::GetRequestUri(std::string& uri) {
 
 esp_err_t HttpServer::Transaction::GetRequestHeader(const std::string& name, std::string& value) {
   ESP_RETURN_ON_FALSE(!responseWritten, ESP_ERR_INVALID_STATE, TAG, "response has already been sent");
+  
   size_t valueSize = httpd_req_get_hdr_value_len(req, name.c_str()) + 1;
   std::unique_ptr<char[]> tempValue(new char[valueSize]);
   ESP_RETURN_ON_ERROR(httpd_req_get_hdr_value_str(req, name.c_str(), (char*)(tempValue.get()), valueSize), TAG, "get header value string failed");
@@ -337,6 +339,12 @@ esp_err_t HttpServer::Transaction::SetResponseHeader(const std::string& name, co
 
   ESP_RETURN_ON_ERROR(httpd_resp_set_hdr(req, nameStr, valueStr), TAG, "set header failed");
   return ESP_OK;
+}
+
+//==============================================================================
+
+bool HttpServer::Transaction::IsResponseWritten() {
+  return responseWritten;
 }
 
 //==============================================================================
