@@ -241,16 +241,27 @@ HttpServer::Transaction::Transaction(HttpServer& server, httpd_req_t* req) :
 
 esp_err_t HttpServer::Transaction::ReadRequestBody(void* dest, size_t size) {
   ESP_RETURN_ON_FALSE(!responseWritten, ESP_ERR_INVALID_STATE, TAG, "response has already been sent");
+  if (!size)
+    return ESP_OK;
 
-  int res = httpd_req_recv(req, (char*)dest, size);
-  if (res <= 0) {
-    if (res == HTTPD_SOCK_ERR_TIMEOUT) {
-      responseWritten = true;
-      httpd_resp_send_408(req);
-      ESP_RETURN_ON_ERROR(ESP_ERR_TIMEOUT, TAG, "timeout");
-    }
-    ESP_RETURN_ON_ERROR(ESP_FAIL, TAG, "request receive failed"); 
+  int res = 0;
+  if (dest) {
+    for (; size && (res = httpd_req_recv(req, (char*)dest, size)) > 0; size -= res, dest = (uint8_t*)dest + res);
   }
+  else {
+    char data;
+    for (; size && (res = httpd_req_recv(req, &data, 1)) > 0; size--);
+  }
+
+  if (!size)
+    return ESP_OK;
+
+  if (res == HTTPD_SOCK_ERR_TIMEOUT) {
+    responseWritten = true;
+    httpd_resp_send_408(req);
+    ESP_RETURN_ON_ERROR(ESP_ERR_TIMEOUT, TAG, "timeout");
+  }
+  ESP_RETURN_ON_ERROR(ESP_FAIL, TAG, "request receive failed");
   return ESP_OK;
 }
 

@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - HttpServer separate URI buffer.
 
+### Fixed
+- HttpServer::Transaction::ReadRequestBody not looping on partial reads.
+
 ## [1.1.0] - 2024-08-26
 ### Changed
 - Version minor number to indicate changed ESP-IDF dependency.
