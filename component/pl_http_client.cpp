@@ -172,6 +172,8 @@ esp_err_t HttpClient::ReadResponseBody(void* dest, size_t size) {
 //==============================================================================
 
 esp_err_t HttpClient::Disconnect() {
+  LockGuard lg(*this);
+  ESP_RETURN_ON_FALSE(clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
   ESP_RETURN_ON_ERROR(esp_http_client_close(clientHandle), TAG, "close failed");
   return ESP_OK;
 }
