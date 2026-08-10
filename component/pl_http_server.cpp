@@ -134,11 +134,13 @@ esp_err_t HttpServer::Disable() {
   if (!enabled)
     return ESP_OK;
 
-  ESP_RETURN_ON_ERROR(httpd_unregister_uri(serverHandle, "*"), TAG, "unregister URI handler failed");
-  httpd_ssl_stop(serverHandle);
+  esp_err_t unregisterUriError = httpd_unregister_uri(serverHandle, "*");
+  if (unregisterUriError != ESP_OK)
+    ESP_LOGE(TAG, "unregister URI failed");
+  ESP_RETURN_ON_ERROR(httpd_ssl_stop(serverHandle), TAG, "stop failed");
   enabled = false;
   disabledEvent.Generate();
-  return ESP_OK;
+  return unregisterUriError;
 }
 
 //==============================================================================
