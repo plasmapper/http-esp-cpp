@@ -27,36 +27,30 @@ public:
   static constexpr TickType_t defaultReadTimeout = 5000 / portTICK_PERIOD_MS;
   /// @brief Default server task parameters
   static const TaskParameters defaultTaskParameters;
-  /// @brief Default URI buffer size
-  static constexpr size_t defaultUriBufferSize = 512;
   /// @brief Default header buffer size
   static constexpr size_t defaultHeaderBufferSize = 1024;
 
   Event<HttpServer, HttpServerTransaction&> requestEvent;
   
-  /// @brief Creates an HTTP server with shared transaction buffer
-  /// @param uriBuffer URI buffer
+  /// @brief Creates an HTTP server with shared header buffer
   /// @param headerBuffer header buffer
-  HttpServer(std::shared_ptr<Buffer> uriBuffer, std::shared_ptr<Buffer> headerBuffer);
+  HttpServer(std::shared_ptr<Buffer> headerBuffer);
 
-  /// @brief Creates an HTTP server and allocate transaction buffer
-  /// @param uriBufferSize URI buffer size
+  /// @brief Creates an HTTP server and allocate header buffer
   /// @param headerBufferSize header buffer size
-  HttpServer(size_t uriBufferSize = defaultUriBufferSize, size_t headerBufferSize = defaultHeaderBufferSize);
+  HttpServer(size_t headerBufferSize = defaultHeaderBufferSize);
 
-  /// @brief Creates an HTTPS server with shared transaction buffer
+  /// @brief Creates an HTTPS server with shared header buffer
   /// @param certificate certificate
   /// @param privateKey private key
-  /// @param uriBuffer URI buffer
   /// @param headerBuffer header buffer
-  HttpServer(const char* certificate, const char* privateKey, std::shared_ptr<Buffer> uriBuffer, std::shared_ptr<Buffer> headerBuffer);
+  HttpServer(const char* certificate, const char* privateKey, std::shared_ptr<Buffer> headerBuffer);
 
-  /// @brief Creates an HTTPS server and allocate transaction buffer
+  /// @brief Creates an HTTPS server and allocate header buffer
   /// @param certificate certificate
   /// @param privateKey private key
-  /// @param uriBufferSize URI buffer size
   /// @param headerBufferSize header buffer size
-  HttpServer(const char* certificate, const char* privateKey, size_t uriBufferSize = defaultUriBufferSize, size_t headerBufferSize = defaultHeaderBufferSize);
+  HttpServer(const char* certificate, const char* privateKey, size_t headerBufferSize = defaultHeaderBufferSize);
 
   ~HttpServer();
   HttpServer(const HttpServer&) = delete;
@@ -105,10 +99,8 @@ private:
   int maxNumberOfClients = defaultMaxNumberOfClients;
   TickType_t readTimeout = defaultReadTimeout;
   TaskParameters taskParameters = defaultTaskParameters;
-  std::shared_ptr<Buffer> uriBuffer;
   std::shared_ptr<Buffer> headerBuffer;
-  char* requestHeaderDataEnd;
-  char* responseHeaderDataEnd;
+  char* headerDataEnd;
   bool https = false;
   const char* serverCertificate = NULL;
   const char* privateKey = NULL;
@@ -128,8 +120,8 @@ private:
 
     std::shared_ptr<NetworkStream> GetNetworkStream() override;
     HttpMethod GetRequestMethod() override;
-    const char* GetRequestUri() override;
-    const char* GetRequestHeader(const std::string& name) override;
+    esp_err_t GetRequestUri(std::string& uri) override;
+    esp_err_t GetRequestHeader(const std::string& name, std::string& value) override;
     size_t GetRequestBodySize() override;
 
     esp_err_t SetResponseHeader(const std::string& name, const std::string& value) override;
@@ -138,6 +130,7 @@ private:
     HttpServer& server;
     httpd_req_t* req;
     std::shared_ptr<NetworkStream> networkStream;
+    bool responseWritten = false;
   };
 };
 

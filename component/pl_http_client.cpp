@@ -254,16 +254,19 @@ esp_err_t HttpClient::DeleteRequestHeader(const std::string& name) {
 
 //==============================================================================
 
-const char* HttpClient::GetResponseHeader(const std::string& name) {
+esp_err_t HttpClient::GetResponseHeader(const std::string& name, std::string& value) {
   LockGuard lg(*this);
   char* end = headerDataEnd - name.size() - 2;
   for (char* ptr = (char*)headerBuffer->data; ptr < end; ) {
-    if (strncasecmp(ptr, name.c_str(), name.size()) == 0 && *(ptr + name.size()) == ':')
-      return ptr + name.size() + 1;
+    if (strncasecmp(ptr, name.c_str(), name.size()) == 0 && *(ptr + name.size()) == ':') {
+      value = ptr + name.size() + 1;
+      return ESP_OK; 
+    }
     for (; ptr < end && *ptr; ptr++);
     ptr++;
   }
-  return NULL;
+  ESP_RETURN_ON_ERROR(ESP_ERR_NOT_FOUND, TAG, "header not found");
+  return ESP_OK;
 }
 
 //==============================================================================

@@ -45,20 +45,17 @@ const TaskParameters HttpServer::defaultTaskParameters = {4096, tskIDLE_PRIORITY
 
 //==============================================================================
 
-HttpServer::HttpServer(std::shared_ptr<Buffer> uriBuffer, std::shared_ptr<Buffer> headerBuffer) :
-    requestEvent(*this), port(defaultHttpPort), uriBuffer(uriBuffer), headerBuffer(headerBuffer) {
+HttpServer::HttpServer(std::shared_ptr<Buffer> headerBuffer) : requestEvent(*this), port(defaultHttpPort), headerBuffer(headerBuffer) {
   SetName(defaultHttpName);
 }
 
 //==============================================================================
 
-HttpServer::HttpServer(size_t uriBufferSize, size_t headerBufferSize) :
-  HttpServer(std::make_shared<Buffer>(uriBufferSize), std::make_shared<Buffer>(headerBufferSize)) {}
+HttpServer::HttpServer(size_t headerBufferSize) : HttpServer(std::make_shared<Buffer>(headerBufferSize)) {}
 
 //==============================================================================
 
-HttpServer::HttpServer(const char* certificate, const char* privateKey, std::shared_ptr<Buffer> uriBuffer, std::shared_ptr<Buffer> headerBuffer) :
-    requestEvent(*this), port(defaultHttpsPort), uriBuffer(uriBuffer), headerBuffer(headerBuffer) {
+HttpServer::HttpServer(const char* certificate, const char* privateKey, std::shared_ptr<Buffer> headerBuffer) : requestEvent(*this), port(defaultHttpsPort), headerBuffer(headerBuffer) {
   SetName(defaultHttpsName);
   https = true;
   this->serverCertificate = certificate;
@@ -67,8 +64,8 @@ HttpServer::HttpServer(const char* certificate, const char* privateKey, std::sha
 
 //==============================================================================
 
-HttpServer::HttpServer(const char* certificate, const char* privateKey, size_t uriBufferSize, size_t headerBufferSize) :
-  HttpServer(certificate, privateKey, std::make_shared<Buffer>(uriBufferSize), std::make_shared<Buffer>(headerBufferSize)) {}
+HttpServer::HttpServer(const char* certificate, const char* privateKey, size_t headerBufferSize) :
+  HttpServer(certificate, privateKey, std::make_shared<Buffer>(headerBufferSize)) {}
 
 //==============================================================================
 
@@ -211,47 +208,11 @@ esp_err_t HttpServer::SetTaskParameters(const TaskParameters& taskParameters) {
 
 esp_err_t HttpServer::HandleRequest(httpd_req_t* req) {
   HttpServer& server = *(HttpServer*)req->user_ctx;
-  auto uriBuffer = server.uriBuffer;
   auto headerBuffer = server.headerBuffer;
 
-  LockGuard lgServer(server, *uriBuffer, *headerBuffer);
+  LockGuard lgServer(server, *headerBuffer);
   Transaction transaction(server, req);
-
-  if (strlen(req->uri) + 1 > uriBuffer->size) {
-    transaction.WriteResponse(414);
-    ESP_RETURN_ON_ERROR(ESP_ERR_INVALID_SIZE, TAG, "URI buffer is too small");
-  } 
-  strcpy((char*)uriBuffer->data, req->uri);
-
-  if (!headerBuffer->size) {
-    transaction.WriteResponse(431);
-    ESP_RETURN_ON_ERROR(ESP_ERR_INVALID_SIZE, TAG, "header buffer is too small");
-  }
-
-  // Not good, but there seem to be no other way to access all headers
-  char* src = (char*)((uint8_t*)req->aux + sizeof(void*));
-  char* srcEnd = src + CONFIG_HTTPD_MAX_REQ_HDR_LEN;
-  char* dest = (char*)headerBuffer->data;
-  char* destEnd = dest + headerBuffer->size - 1;
-
-  while (src < srcEnd && *src) {
-    while (src < srcEnd && *src) {
-      *(dest++) = *src;
-      if (dest >= destEnd) {
-        transaction.WriteResponse(431);
-        ESP_RETURN_ON_ERROR(ESP_ERR_INVALID_SIZE, TAG, "header buffer is too small");
-      }
-      if (*src != ':')
-        src++;
-      else {
-        src++;
-        for (; src < srcEnd && *src == ' '; src++); 
-      }
-    }
-    *(dest++) = 0;
-    src += 2;
-  }
-  server.requestHeaderDataEnd = server.responseHeaderDataEnd = dest;
+  server.headerDataEnd = (char*)headerBuffer->data;
 
   server.requestEvent.Generate(transaction);
   esp_err_t err = server.HandleRequest(transaction);
@@ -279,9 +240,12 @@ HttpServer::Transaction::Transaction(HttpServer& server, httpd_req_t* req) :
 //==============================================================================
 
 esp_err_t HttpServer::Transaction::ReadRequestBody(void* dest, size_t size) {
+  ESP_RETURN_ON_FALSE(!responseWritten, ESP_ERR_INVALID_STATE, TAG, "response has already been sent");
+
   int res = httpd_req_recv(req, (char*)dest, size);
   if (res <= 0) {
     if (res == HTTPD_SOCK_ERR_TIMEOUT) {
+      responseWritten = true;
       httpd_resp_send_408(req);
       ESP_RETURN_ON_ERROR(ESP_ERR_TIMEOUT, TAG, "timeout");
     }
@@ -293,11 +257,14 @@ esp_err_t HttpServer::Transaction::ReadRequestBody(void* dest, size_t size) {
 //==============================================================================
 
 esp_err_t HttpServer::Transaction::WriteResponse(uint16_t statusCode, const void* body, size_t bodySize) {
+  ESP_RETURN_ON_FALSE(!responseWritten, ESP_ERR_INVALID_STATE, TAG, "response has already been sent");
+
   std::string status = std::to_string(statusCode) + " ";
   auto statusCodeIterator = httpStatusCodeMap.find(statusCode);
   if (statusCodeIterator != httpStatusCodeMap.end())
     status += statusCodeIterator->second;
   ESP_RETURN_ON_ERROR(httpd_resp_set_status(req, status.c_str()), TAG, "set status failed");
+  responseWritten = true;
   ESP_RETURN_ON_ERROR(httpd_resp_send(req, (char*)body, bodySize), TAG, "response send failed");
   return ESP_OK;
 }
@@ -317,22 +284,21 @@ HttpMethod HttpServer::Transaction::GetRequestMethod() {
 
 //==============================================================================
 
-const char* HttpServer::Transaction::GetRequestUri() {
-  return (const char*)server.uriBuffer->data;
+esp_err_t HttpServer::Transaction::GetRequestUri(std::string& uri) {
+  ESP_RETURN_ON_FALSE(!responseWritten, ESP_ERR_INVALID_STATE, TAG, "response has already been sent");
+  uri = req->uri;
+  return ESP_OK;
 }
 
 //==============================================================================
 
-const char* HttpServer::Transaction::GetRequestHeader(const std::string& name) {
-  char* end = server.requestHeaderDataEnd - name.size() - 2;
-  for (char* ptr = (char*)server.headerBuffer->data; ptr < end; ) {
-    if (strncasecmp(ptr, name.c_str(), name.size()) == 0 && *(ptr + name.size()) == ':')
-      return ptr + name.size() + 1;
-
-    for (; ptr < end && *ptr; ptr++);
-    ptr++;
-  }
-  return NULL;
+esp_err_t HttpServer::Transaction::GetRequestHeader(const std::string& name, std::string& value) {
+  ESP_RETURN_ON_FALSE(!responseWritten, ESP_ERR_INVALID_STATE, TAG, "response has already been sent");
+  size_t valueSize = httpd_req_get_hdr_value_len(req, name.c_str()) + 1;
+  std::unique_ptr<char[]> tempValue(new char[valueSize]);
+  ESP_RETURN_ON_ERROR(httpd_req_get_hdr_value_str(req, name.c_str(), (char*)(tempValue.get()), valueSize), TAG, "get header value string failed");
+  value = tempValue.get();
+  return ESP_OK;
 }
 
 //==============================================================================
@@ -344,15 +310,18 @@ size_t HttpServer::Transaction::GetRequestBodySize() {
 //==============================================================================
 
 esp_err_t HttpServer::Transaction::SetResponseHeader(const std::string& name, const std::string& value) {
-  char*& responseHeaderDataEnd = server.responseHeaderDataEnd;
-  ESP_RETURN_ON_FALSE(responseHeaderDataEnd - (char*)server.headerBuffer->data + name.size() + value.size() + 2 <= server.headerBuffer->size, \
-                       ESP_ERR_INVALID_SIZE, TAG, "header buffer is too small");
-  char* nameStr = responseHeaderDataEnd;
-  memcpy(responseHeaderDataEnd, name.c_str(), name.size() + 1);
-  responseHeaderDataEnd += name.size() + 1;
-  char* valueStr = responseHeaderDataEnd;
-  memcpy(responseHeaderDataEnd, value.c_str(), value.size() + 1);
-  responseHeaderDataEnd += value.size() + 1;
+  ESP_RETURN_ON_FALSE(!responseWritten, ESP_ERR_INVALID_STATE, TAG, "response has already been sent");
+
+  char*& headerDataEnd = server.headerDataEnd;
+  ESP_RETURN_ON_FALSE(headerDataEnd - (char*)server.headerBuffer->data + name.size() + value.size() + 2 <= server.headerBuffer->size, \
+                      ESP_ERR_INVALID_SIZE, TAG, "header buffer is too small");
+  char* nameStr = headerDataEnd;
+  memcpy(headerDataEnd, name.c_str(), name.size() + 1);
+  headerDataEnd += name.size() + 1;
+  char* valueStr = headerDataEnd;
+  memcpy(headerDataEnd, value.c_str(), value.size() + 1);
+  headerDataEnd += value.size() + 1;
+
   ESP_RETURN_ON_ERROR(httpd_resp_set_hdr(req, nameStr, valueStr), TAG, "set header failed");
   return ESP_OK;
 }

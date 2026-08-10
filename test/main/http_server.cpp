@@ -47,15 +47,16 @@ void TestServer(PL::HttpServer& server, PL::HttpClient& client) {
     TEST_ASSERT(server.Enable() == ESP_OK);
     TEST_ASSERT(server.IsEnabled());
 
-    for (auto& header : requestHeaders) {
-      TEST_ASSERT(client.SetRequestHeader(header.first, header.second) == ESP_OK);
+    for (auto& h : requestHeaders) {
+      TEST_ASSERT(client.SetRequestHeader(h.first, h.second) == ESP_OK);
     }
     TEST_ASSERT(client.WriteRequest(correctRequestMethod, correctRequestUri, requestBody) == ESP_OK);
     TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, &responseBodySize) == ESP_OK);
     TEST_ASSERT_EQUAL(200, responseStatusCode);
-    for (auto& header : requestHeaders) {
-      TEST_ASSERT(client.GetResponseHeader(header.first) != NULL);
-      TEST_ASSERT(client.GetResponseHeader(header.first) == header.second);
+    for (auto& h : requestHeaders) {
+      std::string responseHeaderValue;
+      TEST_ASSERT(client.GetResponseHeader(h.first, responseHeaderValue) == ESP_OK);
+      TEST_ASSERT(h.second == responseHeaderValue);
     }
     TEST_ASSERT_EQUAL(requestBody.size(), responseBodySize);
     TEST_ASSERT(client.ReadResponseBody(responseBody, responseBodySize) == ESP_OK);
@@ -80,15 +81,17 @@ void TestServer(PL::HttpServer& server, PL::HttpClient& client) {
 //==============================================================================
 
 esp_err_t HttpServer::HandleRequest(PL::HttpServerTransaction& transaction) {
+  std::string requestUri, requestHeaderValue;
   char requestBody[100];
   size_t requestBodySize = transaction.GetRequestBodySize();
 
   switch (transaction.GetRequestMethod()) {
     case PL::HttpMethod::GET:
-      if (transaction.GetRequestUri() == correctRequestUri) {
+      transaction.GetRequestUri(requestUri);
+      if (requestUri == correctRequestUri) {
         for (auto& header : requestHeaders) {
-          if (auto value = transaction.GetRequestHeader(header.first))
-            transaction.SetResponseHeader(header.first, value);
+          if (transaction.GetRequestHeader(header.first, requestHeaderValue) == ESP_OK)
+            transaction.SetResponseHeader(header.first, requestHeaderValue);
         }
         if (requestBodySize <= sizeof(requestBody)) {
           transaction.ReadRequestBody(requestBody, requestBodySize);

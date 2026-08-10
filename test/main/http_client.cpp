@@ -60,8 +60,9 @@ void TestClient(PL::HttpClient& client) {
     TEST_ASSERT_EQUAL(t.responseStatusCode, responseStatusCode);
   
     for (auto& h : t.responseHeaders) {
-      TEST_ASSERT(client.GetResponseHeader(h.first) != NULL);
-      TEST_ASSERT(client.GetResponseHeader(h.first) == h.second);
+      std::string responseHeaderValue;
+      TEST_ASSERT(client.GetResponseHeader(h.first, responseHeaderValue) == ESP_OK);
+      TEST_ASSERT(h.second == responseHeaderValue);
     }      
 
     TEST_ASSERT(responseBodySize + 1 <= sizeof(responseBody));

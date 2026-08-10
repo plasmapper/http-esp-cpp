@@ -151,8 +151,9 @@ public:
 
   /// @brief Gets the response header value
   /// @param name header name
-  /// @return header value (NULL if no such header in the request)
-  const char* GetResponseHeader(const std::string& name);
+  /// @param value header value
+  /// @return error code
+  esp_err_t GetResponseHeader(const std::string& name, std::string& value);
 
 private:
   Mutex mutex;

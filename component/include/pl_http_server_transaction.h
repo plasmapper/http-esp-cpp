@@ -56,13 +56,15 @@ public:
   virtual HttpMethod GetRequestMethod() = 0;
 
   /// @brief Gets the request URI
-  /// @return URI
-  virtual const char* GetRequestUri() = 0;
+  /// @param uri URI
+  /// @return error code
+  virtual esp_err_t GetRequestUri(std::string& uri) = 0;
 
   /// @brief Gets the request header value
   /// @param name header name
-  /// @return header value (NULL if no such header in the request)
-  virtual const char* GetRequestHeader(const std::string& name) = 0;
+  /// @param value header value
+  /// @return error code
+  virtual esp_err_t GetRequestHeader(const std::string& name, std::string& value) = 0;
 
   /// @brief Gets the request body size
   /// @return body size

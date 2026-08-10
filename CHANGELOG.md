@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Lock timeout handling.
 - Static const members to constexpr.
+- HttpServer::GetRequestUri, HttpServer::GetRequestHeader and HttpClient::GetResponseHeader to return esp_err_t with an output parameter instead of a raw pointer.
+- HttpServer::GetRequestHeader to use the ESP-IDF header API instead of reading httpd_req_t internal struct layout.
+
+### Removed
+- HttpServer separate URI buffer.
 
 ## [1.1.0] - 2024-08-26
 ### Changed
