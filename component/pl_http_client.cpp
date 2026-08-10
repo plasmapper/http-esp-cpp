@@ -22,7 +22,8 @@ static std::map<HttpAuthScheme, esp_http_client_auth_type_t> httpAuthSchemeMap {
 
 //==============================================================================
 
-HttpClient::HttpClient(const std::string& hostname, std::shared_ptr<Buffer> headerBuffer) : hostname(hostname), headerBuffer(headerBuffer) {
+HttpClient::HttpClient(const std::string& hostname, size_t headerBufferSize) :
+    hostname(hostname), headerBuffer(std::make_shared<Buffer>(headerBufferSize)) {
   headerDataEnd = (char*)headerBuffer->data;
   clientConfig.host = hostname.c_str();
   clientConfig.path = "/";
@@ -34,12 +35,8 @@ HttpClient::HttpClient(const std::string& hostname, std::shared_ptr<Buffer> head
 
 //==============================================================================
 
-HttpClient::HttpClient(const std::string& hostname, size_t headerBufferSize) : HttpClient(hostname, std::make_shared<Buffer>(headerBufferSize)) {}
-
-//==============================================================================
-
-HttpClient::HttpClient(const std::string& hostname, const char* certificate, std::shared_ptr<Buffer> headerBuffer) :
-    HttpClient(hostname, headerBuffer) {
+HttpClient::HttpClient(const std::string& hostname, const char* certificate, size_t headerBufferSize) :
+    HttpClient(hostname, headerBufferSize) {
   clientConfig.cert_pem = certificate;
   clientConfig.cert_len = strlen(certificate) + 1;
   clientConfig.transport_type = HTTP_TRANSPORT_OVER_SSL;
@@ -48,22 +45,12 @@ HttpClient::HttpClient(const std::string& hostname, const char* certificate, std
 
 //==============================================================================
 
-HttpClient::HttpClient(const std::string& hostname, const char* certificate, size_t headerBufferSize) :
-  HttpClient(hostname, certificate, std::make_shared<Buffer>(headerBufferSize)) {}
-
-//==============================================================================
-
-HttpClient::HttpClient(const std::string& hostname, esp_err_t (*crt_bundle_attach)(void *conf), std::shared_ptr<Buffer> headerBuffer) :
-    HttpClient(hostname, headerBuffer) {
+HttpClient::HttpClient(const std::string& hostname, esp_err_t (*crt_bundle_attach)(void *conf), size_t headerBufferSize) :
+    HttpClient(hostname, headerBufferSize) {
   clientConfig.crt_bundle_attach = crt_bundle_attach;
   clientConfig.transport_type = HTTP_TRANSPORT_OVER_SSL;
   clientConfig.port = defaultHttpsPort;
 }
-
-//==============================================================================
-
-HttpClient::HttpClient(const std::string& hostname, esp_err_t (*crt_bundle_attach)(void *conf), size_t headerBufferSize) :
-  HttpClient(hostname, crt_bundle_attach, std::make_shared<Buffer>(headerBufferSize)) {}
 
 //==============================================================================
 
@@ -141,7 +128,7 @@ esp_err_t HttpClient::WriteRequest(HttpMethod method, const std::string& uri) {
 //==============================================================================
 
 esp_err_t HttpClient::ReadResponseHeaders(ushort& statusCode, size_t* bodySize) {
-  LockGuard lg(*this, *headerBuffer);
+  LockGuard lg(*this);
   ESP_RETURN_ON_FALSE(clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
 
   ESP_RETURN_ON_ERROR(esp_http_client_set_timeout_ms(clientHandle, readTimeout * portTICK_PERIOD_MS), TAG, "HTTP client set timeout failed");
@@ -257,7 +244,7 @@ esp_err_t HttpClient::DeleteRequestHeader(const std::string& name) {
 //==============================================================================
 
 esp_err_t HttpClient::GetResponseHeader(const std::string& name, std::string& value) {
-  LockGuard lg(*this, *headerBuffer);
+  LockGuard lg(*this);
   char* base = (char*)headerBuffer->data;
   size_t headerDataSize = headerDataEnd - base;
   char* end = base + (headerDataSize > name.size() + 2 ? headerDataSize - name.size() - 2 : 0);

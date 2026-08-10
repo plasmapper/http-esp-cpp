@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - HttpServer separate URI buffer.
+- HttpClient constructors taking a shared header buffer.
 
 ### Fixed
 - HttpServer::Transaction::ReadRequestBody not looping on partial reads.

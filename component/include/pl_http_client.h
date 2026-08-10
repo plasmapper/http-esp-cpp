@@ -24,31 +24,14 @@ public:
 
   /// @brief Creates an HTTP client
   /// @param hostname hostname
-  /// @param headerBuffer header buffer
-  HttpClient(const std::string& hostname, std::shared_ptr<Buffer> headerBuffer);
-
-  /// @brief Creates an HTTP client
-  /// @param hostname hostname
   /// @param headerBufferSize header buffer size
   HttpClient(const std::string& hostname, size_t headerBufferSize = defaultHeaderBufferSize);
 
   /// @brief Creates an HTTPS client
   /// @param hostname hostname
   /// @param serverCertificate server certificate
-  /// @param headerBuffer header buffer
-  HttpClient(const std::string& hostname, const char* serverCertificate, std::shared_ptr<Buffer> headerBuffer);
-
-  /// @brief Creates an HTTPS client
-  /// @param hostname hostname
-  /// @param serverCertificate server certificate
   /// @param headerBufferSize header buffer size
   HttpClient(const std::string& hostname, const char* serverCertificate, size_t headerBufferSize = defaultHeaderBufferSize);
-
-  /// @brief Creates an HTTPS client
-  /// @param hostname hostname
-  /// @param crt_bundle_attach function pointer to esp_crt_bundle_attach
-  /// @param headerBuffer header buffer
-  HttpClient(const std::string& hostname, esp_err_t (*crt_bundle_attach)(void *conf), std::shared_ptr<Buffer> headerBuffer);
 
   /// @brief Creates an HTTPS client
   /// @param hostname hostname
