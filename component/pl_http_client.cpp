@@ -194,8 +194,8 @@ esp_err_t HttpClient::SetPort(uint16_t port) {
   if (!clientHandle)
     return ESP_OK;
   esp_http_client_handle_t tempHandle = clientHandle;
-  clientHandle = NULL;
   ESP_RETURN_ON_ERROR(esp_http_client_cleanup(tempHandle), TAG, "cleanup failed");
+  clientHandle = NULL;
   ESP_RETURN_ON_ERROR(Initialize(), TAG, "initialize failed");
   return ESP_OK; 
 }
