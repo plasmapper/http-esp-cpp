@@ -98,10 +98,10 @@ esp_err_t HttpServer::Enable() {
 
   serverConfig = HTTPD_SSL_CONFIG_DEFAULT();
   serverConfig.transport_mode = https ? HTTPD_SSL_TRANSPORT_SECURE : HTTPD_SSL_TRANSPORT_INSECURE;
-  serverConfig.servercert = https ? (const uint8_t*)serverCertificate : NULL;
-  serverConfig.servercert_len = https ? strlen(serverCertificate) + 1 : 0;
-  serverConfig.prvtkey_pem = https ? (const uint8_t*)privateKey : NULL;
-  serverConfig.prvtkey_len = https ? strlen(privateKey) + 1 : 0;
+  serverConfig.servercert = (https && serverCertificate) ? (const uint8_t*)serverCertificate : NULL;
+  serverConfig.servercert_len = (https && serverCertificate) ? strlen(serverCertificate) + 1 : 0;
+  serverConfig.prvtkey_pem = (https && privateKey) ? (const uint8_t*)privateKey : NULL;
+  serverConfig.prvtkey_len = (https && privateKey) ? strlen(privateKey) + 1 : 0;
   serverConfig.httpd.task_priority = taskParameters.priority;
   serverConfig.httpd.stack_size = taskParameters.stackDepth;
   serverConfig.httpd.core_id = taskParameters.coreId;

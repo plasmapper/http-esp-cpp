@@ -38,7 +38,7 @@ HttpClient::HttpClient(const std::string& hostname, size_t headerBufferSize) :
 HttpClient::HttpClient(const std::string& hostname, const char* certificate, size_t headerBufferSize) :
     HttpClient(hostname, headerBufferSize) {
   clientConfig.cert_pem = certificate;
-  clientConfig.cert_len = strlen(certificate) + 1;
+  clientConfig.cert_len = certificate ? strlen(certificate) + 1 : 0;
   clientConfig.transport_type = HTTP_TRANSPORT_OVER_SSL;
   clientConfig.port = defaultHttpsPort;
 }
