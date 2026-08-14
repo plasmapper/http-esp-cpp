@@ -107,7 +107,7 @@ esp_err_t HttpServer::Enable() {
   serverConfig.httpd.core_id = taskParameters.coreId;
   serverConfig.httpd.server_port = serverConfig.httpd.ctrl_port = serverConfig.port_secure = serverConfig.port_insecure = port;
   serverConfig.httpd.backlog_conn = serverConfig.httpd.max_open_sockets = maxNumberOfClients;
-  serverConfig.httpd.recv_wait_timeout = readTimeout * portTICK_PERIOD_MS / 1000 + 1;
+  serverConfig.httpd.recv_wait_timeout = readTimeout == portMAX_DELAY ? UINT16_MAX : readTimeout * portTICK_PERIOD_MS / 1000 + 1;
   serverConfig.httpd.uri_match_fn = httpd_uri_match_wildcard;
 
   ESP_RETURN_ON_ERROR(httpd_ssl_start(&serverHandle, &serverConfig), TAG, "start failed");
