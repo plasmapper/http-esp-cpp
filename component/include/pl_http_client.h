@@ -19,6 +19,8 @@ public:
   static constexpr uint16_t defaultHttpsPort = 443;
   /// @brief Default read operation timeout in FreeRTOS ticks
   static constexpr TickType_t defaultReadTimeout = 5000 / portTICK_PERIOD_MS;
+  /// @brief Default write operation timeout in FreeRTOS ticks
+  static constexpr TickType_t defaultWriteTimeout = 5000 / portTICK_PERIOD_MS;
   /// @brief Default header buffer size
   static constexpr size_t defaultHeaderBufferSize = 1024;
 
@@ -105,10 +107,19 @@ public:
   /// @return timeout in FreeRTOS ticks
   TickType_t GetReadTimeout();
 
-  /// @brief Sets the read operation timeout 
+  /// @brief Sets the read operation timeout
   /// @param timeout timeout in FreeRTOS ticks
   /// @return error code
   esp_err_t SetReadTimeout(TickType_t timeout);
+
+  /// @brief Gets the write operation timeout
+  /// @return timeout in FreeRTOS ticks
+  TickType_t GetWriteTimeout();
+
+  /// @brief Sets the write operation timeout
+  /// @param timeout timeout in FreeRTOS ticks
+  /// @return error code
+  esp_err_t SetWriteTimeout(TickType_t timeout);
 
   /// @brief Sets the request authentication scheme
   /// @param scheme authentication scheme
@@ -142,6 +153,7 @@ private:
   Mutex mutex;
   std::string hostname;
   TickType_t readTimeout = defaultReadTimeout;
+  TickType_t writeTimeout = defaultWriteTimeout;
   std::shared_ptr<Buffer> headerBuffer;
   char* headerDataEnd;
   esp_http_client_config_t clientConfig = {};

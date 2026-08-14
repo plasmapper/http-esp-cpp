@@ -107,6 +107,7 @@ esp_err_t HttpClient::WriteRequestHeaders(HttpMethod method, const std::string& 
 esp_err_t HttpClient::WriteRequestBody(const void* src, size_t size) {
   LockGuard lg(*this);
   ESP_RETURN_ON_FALSE(clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
+  ESP_RETURN_ON_ERROR(esp_http_client_set_timeout_ms(clientHandle, writeTimeout == portMAX_DELAY ? -1 : writeTimeout * portTICK_PERIOD_MS), TAG, "set timeout failed");
   ESP_RETURN_ON_FALSE(esp_http_client_write(clientHandle, (char*)src, size) >= 0, ESP_FAIL, TAG, "write failed");
   return ESP_OK;
 }
@@ -131,7 +132,7 @@ esp_err_t HttpClient::ReadResponseHeaders(ushort& statusCode, size_t* bodySize) 
   LockGuard lg(*this);
   ESP_RETURN_ON_FALSE(clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
 
-  ESP_RETURN_ON_ERROR(esp_http_client_set_timeout_ms(clientHandle, readTimeout * portTICK_PERIOD_MS), TAG, "HTTP client set timeout failed");
+  ESP_RETURN_ON_ERROR(esp_http_client_set_timeout_ms(clientHandle, readTimeout == portMAX_DELAY ? -1 : readTimeout * portTICK_PERIOD_MS), TAG, "HTTP client set timeout failed");
   headerDataEnd = (char*)headerBuffer->data;
   
   int64_t tempResponseBodySize = esp_http_client_fetch_headers(clientHandle);
@@ -151,7 +152,7 @@ esp_err_t HttpClient::ReadResponseHeaders(ushort& statusCode, size_t* bodySize) 
 esp_err_t HttpClient::ReadResponseBody(void* dest, size_t size) {
   LockGuard lg(*this);
   ESP_RETURN_ON_FALSE(clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
-  ESP_RETURN_ON_ERROR(esp_http_client_set_timeout_ms(clientHandle, readTimeout * portTICK_PERIOD_MS), TAG, "set timeout failed");
+  ESP_RETURN_ON_ERROR(esp_http_client_set_timeout_ms(clientHandle, readTimeout == portMAX_DELAY ? -1 : readTimeout * portTICK_PERIOD_MS), TAG, "set timeout failed");
   ESP_RETURN_ON_FALSE(esp_http_client_read(clientHandle, (char*)dest, size) == size, ESP_FAIL, TAG, "read failed");
   return ESP_OK;
 }
@@ -199,6 +200,21 @@ TickType_t HttpClient::GetReadTimeout() {
 esp_err_t HttpClient::SetReadTimeout(TickType_t timeout) {
   LockGuard lg(*this);
   this->readTimeout = timeout;
+  return ESP_OK;
+}
+
+//==============================================================================
+
+TickType_t HttpClient::GetWriteTimeout() {
+  LockGuard lg(*this);
+  return writeTimeout;
+}
+
+//==============================================================================
+
+esp_err_t HttpClient::SetWriteTimeout(TickType_t timeout) {
+  LockGuard lg(*this);
+  this->writeTimeout = timeout;
   return ESP_OK;
 }
 

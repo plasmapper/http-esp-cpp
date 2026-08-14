@@ -5,6 +5,7 @@
 //==============================================================================
 
 const TickType_t readTimeout = 5000 / portTICK_PERIOD_MS;
+const TickType_t writeTimeout = 6000 / portTICK_PERIOD_MS;
 const std::string hostname = "httpbin.org";
 
 const std::vector<TestTransaction> testTransactions= {
@@ -40,6 +41,10 @@ void TestClient(PL::HttpClient& client) {
   TEST_ASSERT_EQUAL(PL::HttpClient::defaultReadTimeout, client.GetReadTimeout());
   TEST_ASSERT(client.SetReadTimeout(readTimeout) == ESP_OK);
   TEST_ASSERT_EQUAL(readTimeout, client.GetReadTimeout());
+
+  TEST_ASSERT_EQUAL(PL::HttpClient::defaultWriteTimeout, client.GetWriteTimeout());
+  TEST_ASSERT(client.SetWriteTimeout(writeTimeout) == ESP_OK);
+  TEST_ASSERT_EQUAL(writeTimeout, client.GetWriteTimeout());
 
   ushort responseStatusCode;
   size_t responseBodySize;

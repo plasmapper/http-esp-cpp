@@ -25,6 +25,8 @@ public:
   static constexpr size_t defaultMaxNumberOfClients = 1;
   /// @brief Default read operation timeout in FreeRTOS ticks
   static constexpr TickType_t defaultReadTimeout = 5000 / portTICK_PERIOD_MS;
+  /// @brief Default write operation timeout in FreeRTOS ticks
+  static constexpr TickType_t defaultWriteTimeout = 5000 / portTICK_PERIOD_MS;
   /// @brief Default server task parameters
   static const TaskParameters defaultTaskParameters;
   /// @brief Default header buffer size
@@ -74,10 +76,19 @@ public:
   /// @return timeout in FreeRTOS ticks
   TickType_t GetReadTimeout();
 
-  /// @brief Sets the read operation timeout 
+  /// @brief Sets the read operation timeout
   /// @param timeout timeout in FreeRTOS ticks
   /// @return error code
   esp_err_t SetReadTimeout(TickType_t timeout);
+
+  /// @brief Gets the write operation timeout
+  /// @return timeout in FreeRTOS ticks
+  TickType_t GetWriteTimeout();
+
+  /// @brief Sets the write operation timeout
+  /// @param timeout timeout in FreeRTOS ticks
+  /// @return error code
+  esp_err_t SetWriteTimeout(TickType_t timeout);
 
   /// @brief Sets the server task parameters
   /// @param taskParameters task parameters
@@ -96,6 +107,7 @@ private:
   uint16_t port;
   size_t maxNumberOfClients = defaultMaxNumberOfClients;
   TickType_t readTimeout = defaultReadTimeout;
+  TickType_t writeTimeout = defaultWriteTimeout;
   TaskParameters taskParameters = defaultTaskParameters;
   std::shared_ptr<Buffer> headerBuffer;
   char* headerDataEnd;

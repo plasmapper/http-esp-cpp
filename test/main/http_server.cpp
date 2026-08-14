@@ -7,6 +7,7 @@
 
 ushort port = 500;
 const TickType_t readTimeout = 3000 / portTICK_PERIOD_MS;
+const TickType_t writeTimeout = 4000 / portTICK_PERIOD_MS;
 const size_t maxNumberOfClients = 2;
 const std::string host = "localhost";
 
@@ -32,9 +33,9 @@ void TestServer(PL::HttpServer& server, PL::HttpClient& client) {
   TEST_ASSERT(server.SetReadTimeout(readTimeout) == ESP_OK);
   TEST_ASSERT_EQUAL(readTimeout, server.GetReadTimeout());
   
-  TEST_ASSERT_EQUAL(PL::HttpClient::defaultReadTimeout, client.GetReadTimeout());
-  TEST_ASSERT(client.SetReadTimeout(readTimeout) == ESP_OK);
-  TEST_ASSERT_EQUAL(readTimeout, client.GetReadTimeout());
+  TEST_ASSERT_EQUAL(PL::HttpClient::defaultWriteTimeout, client.GetWriteTimeout());
+  TEST_ASSERT(client.SetWriteTimeout(writeTimeout) == ESP_OK);
+  TEST_ASSERT_EQUAL(writeTimeout, client.GetWriteTimeout());
 
   for (int p = 0; p < 2; p++) {
     TEST_ASSERT(server.SetPort(port) == ESP_OK);
