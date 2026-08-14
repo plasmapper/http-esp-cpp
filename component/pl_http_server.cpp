@@ -251,8 +251,9 @@ esp_err_t HttpServer::Transaction::ReadRequestBody(void* dest, size_t size) {
     for (; size && (res = httpd_req_recv(req, (char*)dest, size)) > 0; size -= res, dest = (uint8_t*)dest + res);
   }
   else {
-    char data;
-    for (; size && (res = httpd_req_recv(req, &data, 1)) > 0; size--);
+    constexpr size_t discardBufferSize = 64;
+    char discardBuffer[discardBufferSize];
+    for (; size && (res = httpd_req_recv(req, discardBuffer, std::min(size, discardBufferSize))) > 0; size -= res);
   }
 
   if (!size)

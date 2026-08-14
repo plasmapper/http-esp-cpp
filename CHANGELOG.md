@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - Read timeout conversion to seconds.
+- Discard read performance when discarding data one byte at a time.
 
 ## [2.0.0] - 2026-08-10
 ### Changed
