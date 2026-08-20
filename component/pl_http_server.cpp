@@ -70,7 +70,10 @@ HttpServer::HttpServer(const char* certificate, const char* privateKey, size_t h
 //==============================================================================
 
 HttpServer::~HttpServer() {
-  Disable();
+  if (enabled) {
+    ESP_LOGE(TAG, "StopTask was not called by the derived class destructor");
+    StopTask();
+  }
 }
 
 //==============================================================================
@@ -140,12 +143,25 @@ esp_err_t HttpServer::Disable() {
   if (!enabled)
     return ESP_OK;
 
+  esp_err_t error = StopTask();
+  if (enabled)
+    return error;
+  disabledEvent.Generate();
+  return error;
+}
+
+//==============================================================================
+
+esp_err_t HttpServer::StopTask() {
+  LockGuard lg(*this);
+  if (!enabled)
+    return ESP_OK;
+
   esp_err_t unregisterUriError = httpd_unregister_uri(serverHandle, "*");
   if (unregisterUriError != ESP_OK)
     ESP_LOGE(TAG, "unregister URI failed");
   ESP_RETURN_ON_ERROR(httpd_ssl_stop(serverHandle), TAG, "stop failed");
   enabled = false;
-  disabledEvent.Generate();
   return unregisterUriError;
 }
 

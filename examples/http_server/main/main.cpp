@@ -6,6 +6,7 @@
 class HttpServer : public PL::HttpServer {
 public:
   using PL::HttpServer::HttpServer;
+  ~HttpServer();
 
 protected:
   esp_err_t HandleRequest(PL::HttpServerTransaction& transaction) override;
@@ -64,6 +65,12 @@ extern "C" void app_main(void) {
   while (1) {
     vTaskDelay(1);
   }
+}
+
+//==============================================================================
+
+HttpServer::~HttpServer() {
+  StopTask();
 }
 
 //==============================================================================

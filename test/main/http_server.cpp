@@ -81,6 +81,12 @@ void TestServer(PL::HttpServer& server, PL::HttpClient& client) {
 
 //==============================================================================
 
+HttpServer::~HttpServer() {
+  StopTask();
+}
+
+//==============================================================================
+
 esp_err_t HttpServer::HandleRequest(PL::HttpServerTransaction& transaction) {
   std::string requestUri, requestHeaderValue;
   char requestBody[100];
