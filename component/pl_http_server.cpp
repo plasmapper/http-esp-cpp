@@ -112,8 +112,6 @@ esp_err_t HttpServer::Enable() {
   serverConfig.httpd.uri_match_fn = httpd_uri_match_wildcard;
 
   ESP_RETURN_ON_ERROR(httpd_ssl_start(&serverHandle, &serverConfig), TAG, "start failed");
-  enabled = true;
-  enabledEvent.Generate();
 
   httpd_uri_t requestHandlerInfo = {};
   requestHandlerInfo.uri = "*";
@@ -123,8 +121,15 @@ esp_err_t HttpServer::Enable() {
 
   for (uint32_t i = 0; i < sizeof(methods) / sizeof(http_method); i++) {
     requestHandlerInfo.method = methods[i];
-    ESP_RETURN_ON_ERROR(httpd_register_uri_handler(serverHandle, &requestHandlerInfo), TAG, "register URI handler failed");
+    esp_err_t error = httpd_register_uri_handler(serverHandle, &requestHandlerInfo);
+    if (error != ESP_OK) {
+      httpd_ssl_stop(serverHandle);
+      ESP_RETURN_ON_ERROR(error, TAG, "register URI handler failed");
+    }
   }
+
+  enabled = true;
+  enabledEvent.Generate();
   return ESP_OK;
 }
 
