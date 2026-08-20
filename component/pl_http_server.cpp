@@ -161,6 +161,7 @@ esp_err_t HttpServer::StopTask() {
   if (unregisterUriError != ESP_OK)
     ESP_LOGE(TAG, "unregister URI failed");
   ESP_RETURN_ON_ERROR(httpd_ssl_stop(serverHandle), TAG, "stop failed");
+  serverHandle = NULL;
   enabled = false;
   return unregisterUriError;
 }
