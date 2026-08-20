@@ -12,7 +12,10 @@ namespace PL {
 /// @brief HTTP/HTTPS server transaction class
 class HttpServerTransaction {
 public:
+  HttpServerTransaction() = default;
   virtual ~HttpServerTransaction() = default;
+  HttpServerTransaction(const HttpServerTransaction&) = delete;
+  HttpServerTransaction& operator=(const HttpServerTransaction&) = delete;
 
   /// @brief Gets the transaction network stream
   /// @return network stream

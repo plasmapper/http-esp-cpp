@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Virtual destructor to HttpServerTransaction.
 
+### Changed
+- HttpServerTransaction to be non-copyable.
+
 ### Fixed
 - HttpServer task not being stopped before the derived object is destroyed.
 - HttpServer server handle left dangling after the server is stopped.
