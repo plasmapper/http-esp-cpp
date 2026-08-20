@@ -12,6 +12,8 @@ namespace PL {
 /// @brief HTTP/HTTPS server transaction class
 class HttpServerTransaction {
 public:
+  virtual ~HttpServerTransaction() = default;
+
   /// @brief Gets the transaction network stream
   /// @return network stream
   virtual std::shared_ptr<NetworkStream> GetNetworkStream() = 0;
