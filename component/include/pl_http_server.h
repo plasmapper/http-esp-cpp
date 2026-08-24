@@ -63,6 +63,8 @@ public:
   esp_err_t Lock(TickType_t timeout = portMAX_DELAY) override;
   esp_err_t Unlock() override;
 
+  /// @note The control socket (used to stop the httpd task) is bound to the same UDP port
+  /// number as the server's TCP port, so that port is also silently claimed on UDP.
   esp_err_t Enable() override;
   esp_err_t Disable() override;
 
