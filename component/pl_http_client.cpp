@@ -128,7 +128,7 @@ esp_err_t HttpClient::WriteRequest(HttpMethod method, const std::string& uri) {
 
 //==============================================================================
 
-esp_err_t HttpClient::ReadResponseHeaders(ushort& statusCode, size_t* bodySize) {
+esp_err_t HttpClient::ReadResponseHeaders(uint16_t& statusCode, size_t* bodySize) {
   LockGuard lg(*this);
   ESP_RETURN_ON_FALSE(clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
 

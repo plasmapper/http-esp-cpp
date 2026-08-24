@@ -82,7 +82,7 @@ public:
   /// @param statusCode status code
   /// @param bodySize body size
   /// @return error code
-  esp_err_t ReadResponseHeaders(ushort& statusCode, size_t* bodySize);
+  esp_err_t ReadResponseHeaders(uint16_t& statusCode, size_t* bodySize);
 
   /// @brief Reads the response body
   /// @param dest destination (can be NULL)

@@ -15,7 +15,7 @@ struct TestTransaction {
   std::map<std::string, std::string> requestHeaders;
   std::string requestBody;
 
-  ushort responseStatusCode;
+  uint16_t responseStatusCode;
   std::map<std::string, std::string> responseHeaders;
   std::vector<std::string> responseBodyStrings;
 };

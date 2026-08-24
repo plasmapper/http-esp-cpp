@@ -5,7 +5,7 @@
 
 //==============================================================================
 
-ushort port = 500;
+uint16_t port = 500;
 const TickType_t readTimeout = 3000 / portTICK_PERIOD_MS;
 const TickType_t writeTimeout = 4000 / portTICK_PERIOD_MS;
 const size_t maxNumberOfClients = 2;
@@ -23,7 +23,7 @@ const std::string restartRequestUri = "/restart";
 const std::string trailingEmptyResponseHeaderName = "X-Empty";
 const std::map<std::string, std::string> requestHeaders = { {"A", "B"}, {"C", "D"} };
 const std::string requestBody = "Test body";
-ushort responseStatusCode;
+uint16_t responseStatusCode;
 size_t responseBodySize;
 static char responseBody[100];
 TickType_t transactionNetworkStreamReadTimeout = 0;

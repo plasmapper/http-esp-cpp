@@ -46,7 +46,7 @@ void TestClient(PL::HttpClient& client) {
   TEST_ASSERT(client.SetWriteTimeout(writeTimeout) == ESP_OK);
   TEST_ASSERT_EQUAL(writeTimeout, client.GetWriteTimeout());
 
-  ushort responseStatusCode;
+  uint16_t responseStatusCode;
   size_t responseBodySize;
   for (auto& t : testTransactions) {
     printf("Test %s\n", t.name.c_str());

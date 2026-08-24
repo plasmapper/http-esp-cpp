@@ -34,7 +34,7 @@ extern "C" void app_main(void) {
   httpClient.Initialize();
   httpsClient.Initialize();
 
-  ushort responseStatusCode;
+  uint16_t responseStatusCode;
   size_t responseBodySize;
 
   printf("GET %s from http://%s\n", path.c_str(), host.c_str());
