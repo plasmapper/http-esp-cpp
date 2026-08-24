@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HttpServer task not being stopped before the derived object is destroyed.
 - HttpServer server handle left dangling after the server is stopped.
 - HttpServer deadlock when Enable, Disable or a configuration setter is called from HandleRequest.
+- Transaction network stream overriding the server's read and write timeouts with NetworkStream's defaults.
 
 ## [2.1.1] - 2026-08-20
 ### Fixed

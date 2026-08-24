@@ -308,7 +308,10 @@ esp_err_t HttpServer::RestartIfEnabled() {
 //==============================================================================
 
 HttpServer::Transaction::Transaction(HttpServer& server, httpd_req_t* req) :
-  server(server), req(req), networkStream(std::make_shared<NetworkStream>(httpd_req_to_sockfd(req))) {}
+  server(server), req(req), networkStream(std::make_shared<NetworkStream>(httpd_req_to_sockfd(req))) {
+  networkStream->SetReadTimeout(server.readTimeout);
+  networkStream->SetWriteTimeout(server.writeTimeout);
+}
 
 //==============================================================================
 

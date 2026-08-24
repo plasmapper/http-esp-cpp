@@ -25,6 +25,8 @@ const std::string requestBody = "Test body";
 ushort responseStatusCode;
 size_t responseBodySize;
 static char responseBody[100];
+TickType_t transactionNetworkStreamReadTimeout = 0;
+TickType_t transactionNetworkStreamWriteTimeout = 0;
 
 //==============================================================================
 
@@ -35,9 +37,9 @@ void TestServer(PL::HttpServer& server, PL::HttpClient& client) {
   TEST_ASSERT(server.SetReadTimeout(readTimeout) == ESP_OK);
   TEST_ASSERT_EQUAL(readTimeout, server.GetReadTimeout());
   
-  TEST_ASSERT_EQUAL(PL::HttpClient::defaultWriteTimeout, client.GetWriteTimeout());
-  TEST_ASSERT(client.SetWriteTimeout(writeTimeout) == ESP_OK);
-  TEST_ASSERT_EQUAL(writeTimeout, client.GetWriteTimeout());
+  TEST_ASSERT_EQUAL(PL::HttpServer::defaultWriteTimeout, server.GetWriteTimeout());
+  TEST_ASSERT(server.SetWriteTimeout(writeTimeout) == ESP_OK);
+  TEST_ASSERT_EQUAL(writeTimeout, server.GetWriteTimeout());
 
   for (int p = 0; p < 2; p++) {
     TEST_ASSERT(server.SetPort(port) == ESP_OK);
@@ -64,7 +66,9 @@ void TestServer(PL::HttpServer& server, PL::HttpClient& client) {
     TEST_ASSERT_EQUAL(requestBody.size(), responseBodySize);
     TEST_ASSERT(client.ReadResponseBody(responseBody, responseBodySize) == ESP_OK);
     responseBody[responseBodySize] = 0;
-    TEST_ASSERT(requestBody == responseBody); 
+    TEST_ASSERT(requestBody == responseBody);
+    TEST_ASSERT_EQUAL(readTimeout, transactionNetworkStreamReadTimeout);
+    TEST_ASSERT_EQUAL(writeTimeout, transactionNetworkStreamWriteTimeout);
 
     TEST_ASSERT(client.WriteRequest(incorrectRequestMethod, correctRequestUri) == ESP_OK);
     TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, NULL) == ESP_OK); 
@@ -113,6 +117,8 @@ esp_err_t HttpServer::HandleRequest(PL::HttpServerTransaction& transaction) {
     case PL::HttpMethod::GET:
       transaction.GetRequestUri(requestUri);
       if (requestUri == correctRequestUri) {
+        transactionNetworkStreamReadTimeout = transaction.GetNetworkStream()->GetReadTimeout();
+        transactionNetworkStreamWriteTimeout = transaction.GetNetworkStream()->GetWriteTimeout();
         for (auto& header : requestHeaders) {
           if (transaction.GetRequestHeader(header.first, requestHeaderValue) == ESP_OK)
             transaction.SetResponseHeader(header.first, requestHeaderValue);
