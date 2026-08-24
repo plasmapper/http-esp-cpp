@@ -4,8 +4,8 @@
 
 //==============================================================================
 
-const TickType_t readTimeout = 5000 / portTICK_PERIOD_MS;
-const TickType_t writeTimeout = 6000 / portTICK_PERIOD_MS;
+const TickType_t readTimeout = 3000 / portTICK_PERIOD_MS;
+const TickType_t writeTimeout = 3500 / portTICK_PERIOD_MS;
 const std::string hostname = "httpbin.org";
 
 const std::vector<TestTransaction> testTransactions= {

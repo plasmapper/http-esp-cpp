@@ -18,6 +18,8 @@ const PL::HttpMethod correctRequestMethod = PL::HttpMethod::GET;
 const PL::HttpMethod incorrectRequestMethod = PL::HttpMethod::POST;
 const std::string correctRequestUri = "/correct";
 const std::string incorrectRequestUri = "/incorrect";
+const std::string disableRequestUri = "/disable";
+const std::string restartRequestUri = "/restart";
 const std::map<std::string, std::string> requestHeaders = { {"A", "B"}, {"C", "D"} };
 const std::string requestBody = "Test body";
 ushort responseStatusCode;
@@ -75,6 +77,21 @@ void TestServer(PL::HttpServer& server, PL::HttpClient& client) {
     port++;
   }
 
+  // Test server disable and restart from the request handler
+  TEST_ASSERT(client.WriteRequest(correctRequestMethod, disableRequestUri) == ESP_OK);
+  TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, NULL) == ESP_OK);
+  TEST_ASSERT_EQUAL(200, responseStatusCode);
+  vTaskDelay(100);
+  TEST_ASSERT(!server.IsEnabled());
+  TEST_ASSERT(server.Enable() == ESP_OK);
+  TEST_ASSERT(server.IsEnabled());
+  TEST_ASSERT(client.Disconnect() == ESP_OK);
+  TEST_ASSERT(client.WriteRequest(correctRequestMethod, restartRequestUri) == ESP_OK);
+  TEST_ASSERT(client.ReadResponseHeaders(responseStatusCode, NULL) == ESP_OK);
+  TEST_ASSERT_EQUAL(200, responseStatusCode);
+  vTaskDelay(100);
+  TEST_ASSERT(server.IsEnabled());
+
   TEST_ASSERT(server.Disable() == ESP_OK);
   TEST_ASSERT(!server.IsEnabled());
 }
@@ -106,8 +123,16 @@ esp_err_t HttpServer::HandleRequest(PL::HttpServerTransaction& transaction) {
         }
         return transaction.WriteResponse(413);
       }
-      else
-        return transaction.WriteResponse(404);
+      if (requestUri == disableRequestUri) {
+        transaction.WriteResponse(200);
+        return Disable();
+      }
+      if (requestUri == restartRequestUri) {
+        transaction.WriteResponse(200);
+        Disable();
+        return Enable();
+      }
+      return transaction.WriteResponse(404);
     default:
       return transaction.WriteResponse(405);
   }

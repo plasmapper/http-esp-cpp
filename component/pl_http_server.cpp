@@ -96,6 +96,10 @@ esp_err_t HttpServer::Unlock() {
 
 esp_err_t HttpServer::Enable() {
   LockGuard lg(*this);
+  if (handlingRequest) {
+    enableFromRequest = true;
+    return ESP_OK;
+  }
   if (enabled)
     return ESP_OK;
 
@@ -140,6 +144,11 @@ esp_err_t HttpServer::Enable() {
 
 esp_err_t HttpServer::Disable() {
   LockGuard lg(*this);
+  if (handlingRequest) {
+    enableFromRequest = false;
+    disableFromRequest = true;
+    return ESP_OK;
+  }
   if (!enabled)
     return ESP_OK;
 
@@ -255,18 +264,41 @@ esp_err_t HttpServer::HandleRequest(httpd_req_t* req) {
   Transaction transaction(server, req);
   server.headerDataEnd = (char*)headerBuffer->data;
 
+  server.handlingRequest = true;
   server.requestEvent.Generate(transaction);
   esp_err_t err = server.HandleRequest(transaction);
+  server.handlingRequest = false;
   if (err != ESP_OK && !transaction.IsResponseWritten())
     transaction.WriteResponse(500);
+
+  if (server.disableFromRequest &&
+      xTaskCreatePinnedToCore(RestartTaskCode, "pl_http_server_restart", 4096, &server, server.taskParameters.priority, NULL, server.taskParameters.coreId) != pdPASS)
+    ESP_LOGE(TAG, "restart task create failed");
+
   ESP_RETURN_ON_ERROR(err, TAG, "handle request failed");
   return ESP_OK;
 }
 
 //==============================================================================
 
+void HttpServer::RestartTaskCode(void* parameters) {
+  HttpServer& server = *(HttpServer*)parameters;
+  {
+    LockGuard lg(server);
+    server.disableFromRequest = false;
+    server.Disable();
+    if (server.enableFromRequest) {
+      server.enableFromRequest = false;
+      server.Enable();
+    }
+  }
+  vTaskDelete(NULL);
+}
+
+//==============================================================================
+
 esp_err_t HttpServer::RestartIfEnabled() {
-  if (!enabled)
+  if (!enabled || disableFromRequest)
     return ESP_OK;
   ESP_RETURN_ON_ERROR(Disable(), TAG, "disable failed");
   ESP_RETURN_ON_ERROR(Enable(), TAG, "enable failed");

@@ -105,6 +105,8 @@ protected:
   esp_err_t StopTask();
 
   /// @brief Handles the HTTP request
+  /// @note Enable, Disable and the configuration setters may be called from here;
+  /// the actual restart is deferred to a separate task and runs after the response is sent.
   /// @param transaction transaction
   /// @return error code
   virtual esp_err_t HandleRequest(HttpServerTransaction& transaction) = 0;
@@ -124,8 +126,12 @@ private:
   const char* privateKey = NULL;
   httpd_ssl_config_t serverConfig;
   httpd_handle_t serverHandle = NULL;
-  
+  bool handlingRequest = false;
+  bool disableFromRequest = false;
+  bool enableFromRequest = false;
+
   static esp_err_t HandleRequest(httpd_req_t* req);
+  static void RestartTaskCode(void* parameters);
   esp_err_t RestartIfEnabled();
 
   class Transaction : public HttpServerTransaction {
