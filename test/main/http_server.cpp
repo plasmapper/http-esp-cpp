@@ -20,6 +20,7 @@ const std::string correctRequestUri = "/correct";
 const std::string incorrectRequestUri = "/incorrect";
 const std::string disableRequestUri = "/disable";
 const std::string restartRequestUri = "/restart";
+const std::string trailingEmptyResponseHeaderName = "X-Empty";
 const std::map<std::string, std::string> requestHeaders = { {"A", "B"}, {"C", "D"} };
 const std::string requestBody = "Test body";
 ushort responseStatusCode;
@@ -63,6 +64,9 @@ void TestServer(PL::HttpServer& server, PL::HttpClient& client) {
       TEST_ASSERT(client.GetResponseHeader(h.first, responseHeaderValue) == ESP_OK);
       TEST_ASSERT(h.second == responseHeaderValue);
     }
+    std::string trailingEmptyResponseHeaderValue;
+    TEST_ASSERT(client.GetResponseHeader(trailingEmptyResponseHeaderName, trailingEmptyResponseHeaderValue) == ESP_OK);
+    TEST_ASSERT(trailingEmptyResponseHeaderValue.empty());
     TEST_ASSERT_EQUAL(requestBody.size(), responseBodySize);
     TEST_ASSERT(client.ReadResponseBody(responseBody, responseBodySize) == ESP_OK);
     responseBody[responseBodySize] = 0;
@@ -123,6 +127,7 @@ esp_err_t HttpServer::HandleRequest(PL::HttpServerTransaction& transaction) {
           if (transaction.GetRequestHeader(header.first, requestHeaderValue) == ESP_OK)
             transaction.SetResponseHeader(header.first, requestHeaderValue);
         }
+        transaction.SetResponseHeader(trailingEmptyResponseHeaderName, "");
         if (requestBodySize <= sizeof(requestBody)) {
           transaction.ReadRequestBody(requestBody, requestBodySize);
           return transaction.WriteResponse(200, requestBody, requestBodySize);
