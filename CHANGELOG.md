@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing documentation for HttpServer::Enable claiming the server's UDP port for its control socket.
 - HttpClient::ReadResponseHeaders using the non-standard ushort instead of uint16_t.
 - HttpServer::StopTask returning httpd_unregister_uri error.
+- Transaction::GetRequestHeader logging a missing header as an error.
 
 ## [2.1.1] - 2026-08-20
 ### Fixed

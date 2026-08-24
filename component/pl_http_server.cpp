@@ -1,6 +1,7 @@
 #include "pl_http_server.h"
 #include "esp_check.h"
 #include <map>
+#include <vector>
 
 //==============================================================================
 
@@ -396,10 +397,15 @@ esp_err_t HttpServer::Transaction::GetRequestHeader(const std::string& name, std
   ESP_RETURN_ON_FALSE(!responseWritten, ESP_ERR_INVALID_STATE, TAG, "response has already been sent");
   
   size_t valueSize = httpd_req_get_hdr_value_len(req, name.c_str()) + 1;
-  std::unique_ptr<char[]> tempValue(new char[valueSize]);
-  ESP_RETURN_ON_ERROR(httpd_req_get_hdr_value_str(req, name.c_str(), (char*)(tempValue.get()), valueSize), TAG, "get header value string failed");
-  value = tempValue.get();
-  return ESP_OK;
+  std::vector<char> tempValue(valueSize);
+  esp_err_t error = httpd_req_get_hdr_value_str(req, name.c_str(), tempValue.data(), valueSize);
+  if (error == ESP_ERR_NOT_FOUND)
+    ESP_LOGD(TAG, "header not found");
+  else if (error != ESP_OK)
+    ESP_LOGE(TAG, "get header value string failed");
+  else
+    value = tempValue.data();
+  return error;
 }
 
 //==============================================================================
