@@ -54,8 +54,9 @@ public:
   /// @param headerBufferSize header buffer size
   HttpServer(const char* certificate, const char* privateKey, size_t headerBufferSize = defaultHeaderBufferSize);
 
-  /// @note Every derived class must call StopTask as the first statement of its
-  /// own destructor so that the server task does not call HandleRequest on a partially destroyed object.
+  /// @note Every derived class must call StopTask as the first statement of its own destructor
+  /// so that the server task does not call HandleRequest on a partially destroyed object; the base
+  /// destructor aborts if this was not done.
   ~HttpServer();
   HttpServer(const HttpServer&) = delete;
   HttpServer& operator=(const HttpServer&) = delete;
@@ -102,7 +103,8 @@ public:
 protected:
   /// @brief Stops the server and waits for its task to exit
   /// @note Must be called as the first statement of the destructor of every derived class
-  /// so that the server task does not call HandleRequest on a partially destroyed object.
+  /// so that the server task does not call HandleRequest on a partially destroyed object. Aborts
+  /// if called from within HandleRequest, since it cannot wait for its own task to exit.
   /// @return error code
   esp_err_t StopTask();
 

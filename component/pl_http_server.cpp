@@ -73,7 +73,7 @@ HttpServer::HttpServer(const char* certificate, const char* privateKey, size_t h
 HttpServer::~HttpServer() {
   if (enabled) {
     ESP_LOGE(TAG, "StopTask was not called by the derived class destructor");
-    StopTask();
+    abort();
   }
 }
 
@@ -153,16 +153,17 @@ esp_err_t HttpServer::Disable() {
   if (!enabled)
     return ESP_OK;
 
-  esp_err_t error = StopTask();
-  if (enabled)
-    return error;
-  disabledEvent.Generate();
-  return error;
+  ESP_RETURN_ON_ERROR(StopTask(), TAG, "stop task failed");
+  return ESP_OK;
 }
 
 //==============================================================================
 
 esp_err_t HttpServer::StopTask() {
+  if (handlingRequest) {
+    ESP_LOGE(TAG, "stop task called from the server task itself");
+    abort();
+  }
   LockGuard lg(*this);
   if (!enabled)
     return ESP_OK;
@@ -172,6 +173,7 @@ esp_err_t HttpServer::StopTask() {
   ESP_RETURN_ON_ERROR(httpd_ssl_stop(serverHandle), TAG, "stop failed");
   serverHandle = NULL;
   enabled = false;
+  disabledEvent.Generate();
   return ESP_OK;
 }
 
