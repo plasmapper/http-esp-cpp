@@ -195,6 +195,8 @@ uint16_t HttpServer::GetPort() {
 
 esp_err_t HttpServer::SetPort(uint16_t port) {
   LockGuard lg(*this);
+  if (this->port == port)
+    return ESP_OK;
   this->port = port;
   ESP_RETURN_ON_ERROR(RestartIfEnabled(), TAG, "restart failed");
   return ESP_OK;
@@ -211,6 +213,8 @@ size_t HttpServer::GetMaxNumberOfClients() {
 
 esp_err_t HttpServer::SetMaxNumberOfClients(size_t maxNumberOfClients) {
   LockGuard lg(*this);
+  if (this->maxNumberOfClients == maxNumberOfClients)
+    return ESP_OK;
   this->maxNumberOfClients = maxNumberOfClients;
   ESP_RETURN_ON_ERROR(RestartIfEnabled(), TAG, "restart failed");
   return ESP_OK;
@@ -226,6 +230,8 @@ TickType_t HttpServer::GetReadTimeout() {
 
 esp_err_t HttpServer::SetReadTimeout(TickType_t timeout) {
   LockGuard lg(*this);
+  if (this->readTimeout == timeout)
+    return ESP_OK;
   this->readTimeout = timeout;
   ESP_RETURN_ON_ERROR(RestartIfEnabled(), TAG, "restart failed");
   return ESP_OK;
@@ -242,6 +248,8 @@ TickType_t HttpServer::GetWriteTimeout() {
 
 esp_err_t HttpServer::SetWriteTimeout(TickType_t timeout) {
   LockGuard lg(*this);
+  if (this->writeTimeout == timeout)
+    return ESP_OK;
   this->writeTimeout = timeout;
   ESP_RETURN_ON_ERROR(RestartIfEnabled(), TAG, "restart failed");
   return ESP_OK;
@@ -251,6 +259,8 @@ esp_err_t HttpServer::SetWriteTimeout(TickType_t timeout) {
 
 esp_err_t HttpServer::SetTaskParameters(const TaskParameters& taskParameters) {
   LockGuard lg(*this);
+  if (this->taskParameters == taskParameters)
+    return ESP_OK;
   this->taskParameters = taskParameters;
   ESP_RETURN_ON_ERROR(RestartIfEnabled(), TAG, "restart failed");
   return ESP_OK;
