@@ -40,8 +40,6 @@ static std::map<uint16_t, std::string> httpStatusCodeMap {
 
 //==============================================================================
 
-const std::string HttpServer::defaultHttpName = "HTTP Server";
-const std::string HttpServer::defaultHttpsName = "HTTPS Server";
 const TaskParameters HttpServer::defaultTaskParameters = {4096, tskIDLE_PRIORITY + 5, 0};
 
 //==============================================================================

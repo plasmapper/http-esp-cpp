@@ -14,9 +14,9 @@ namespace PL {
 class HttpServer : public NetworkServer {
 public:
   /// @brief Default HTTP server name
-  static const std::string defaultHttpName;
+  static constexpr const char* defaultHttpName = "HTTP Server";
   /// @brief Default HTTPS server name
-  static const std::string defaultHttpsName;
+  static constexpr const char* defaultHttpsName = "HTTPS Server";
   /// @brief Default HTTP port
   static constexpr uint16_t defaultHttpPort = 80;
   /// @brief Default HTTPS port
