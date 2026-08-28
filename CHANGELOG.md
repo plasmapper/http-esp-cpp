@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - HttpServer::defaultHttpName and defaultHttpsName static initialization order dependency.
+- HttpServer::StopTask deadlocking against an in-flight HandleRequest call by holding the server lock across httpd_ssl_stop.
 
 ## [2.2.2] - 2026-08-27
 ### Fixed

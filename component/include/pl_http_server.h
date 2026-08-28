@@ -133,6 +133,7 @@ private:
   bool handlingRequest = false;
   bool disableFromRequest = false;
   bool enableFromRequest = false;
+  bool stopping = false;
 
   static esp_err_t HandleRequest(httpd_req_t* req);
   static void RestartTaskCode(void* parameters);

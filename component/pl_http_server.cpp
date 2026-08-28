@@ -162,13 +162,30 @@ esp_err_t HttpServer::StopTask() {
     ESP_LOGE(TAG, "stop task called from the server task itself");
     abort();
   }
-  LockGuard lg(*this);
-  if (!enabled)
-    return ESP_OK;
 
-  if (httpd_unregister_uri(serverHandle, "*") != ESP_OK)
-    ESP_LOGE(TAG, "unregister URI failed");
-  ESP_RETURN_ON_ERROR(httpd_ssl_stop(serverHandle), TAG, "stop failed");
+  httpd_handle_t handleToStop;
+  {
+    LockGuard lg(*this);
+    if (!enabled)
+      return ESP_OK;
+    ESP_RETURN_ON_FALSE(!stopping, ESP_ERR_INVALID_STATE, TAG, "stop already in progress");
+
+    if (httpd_unregister_uri(serverHandle, "*") != ESP_OK)
+      ESP_LOGE(TAG, "unregister URI failed");
+    handleToStop = serverHandle;
+    stopping = true;
+  }
+
+  // The lock is released here, before the call that waits for the httpd task to actually stop.
+  // httpd_unregister_uri above already keeps any new request from reaching HandleRequest, but a
+  // request dispatched just before that call may already be blocked acquiring this same lock inside
+  // HandleRequest; releasing it here lets that call finish so the httpd task's worker loop can notice
+  // the stop request. Holding the lock across this call would deadlock the two tasks against each other.
+  esp_err_t error = httpd_ssl_stop(handleToStop);
+
+  LockGuard lg(*this);
+  stopping = false;
+  ESP_RETURN_ON_ERROR(error, TAG, "stop failed");
   serverHandle = NULL;
   enabled = false;
   disabledEvent.Generate();

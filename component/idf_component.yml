@@ -5,4 +5,4 @@ url: https://github.com/plasmapper/http-esp-cpp
 dependencies:
   idf: ">=5.3,<7.0"
   plasmapper/pl_common: "^2.2.0"
-  plasmapper/pl_network: "^1.4.2"
+  plasmapper/pl_network: "^1.4.4"
