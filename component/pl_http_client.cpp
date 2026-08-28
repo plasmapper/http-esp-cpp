@@ -152,8 +152,33 @@ esp_err_t HttpClient::ReadResponseHeaders(uint16_t& statusCode, size_t* bodySize
 esp_err_t HttpClient::ReadResponseBody(void* dest, size_t size) {
   LockGuard lg(*this);
   ESP_RETURN_ON_FALSE(clientHandle, ESP_ERR_INVALID_STATE, TAG, "HTTP client is not initialized");
+  if (!size)
+    return ESP_OK;
   ESP_RETURN_ON_ERROR(esp_http_client_set_timeout_ms(clientHandle, readTimeout == portMAX_DELAY ? -1 : readTimeout * portTICK_PERIOD_MS), TAG, "set timeout failed");
-  ESP_RETURN_ON_FALSE(esp_http_client_read(clientHandle, (char*)dest, size) == size, ESP_FAIL, TAG, "read failed");
+
+  TimeOut_t xTimeOut;
+  vTaskSetTimeOutState(&xTimeOut);
+  TickType_t remainingTimeout = readTimeout;
+
+  int res = 0;
+  do {
+    if (dest) {
+      res = esp_http_client_read(clientHandle, (char*)dest, size);
+      if (res > 0) {
+        size -= res;
+        dest = (uint8_t*)dest + res;
+      }
+    }
+    else {
+      constexpr size_t discardBufferSize = 64;
+      char discardBuffer[discardBufferSize];
+      res = esp_http_client_read(clientHandle, discardBuffer, std::min(size, discardBufferSize));
+      if (res > 0)
+        size -= res;
+    }
+  } while (size && res > 0 && xTaskCheckForTimeOut(&xTimeOut, &remainingTimeout) == pdFALSE);
+
+  ESP_RETURN_ON_FALSE(size == 0, ESP_FAIL, TAG, "read failed");
   return ESP_OK;
 }
 

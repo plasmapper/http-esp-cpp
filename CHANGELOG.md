@@ -4,10 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.2.3] - 2026-08-28
 ### Fixed
 - HttpServer::defaultHttpName and defaultHttpsName static initialization order dependency.
 - HttpServer::StopTask deadlocking against an in-flight HandleRequest call by holding the server lock across httpd_ssl_stop.
+- HttpClient::ReadResponseBody crashing on a NULL destination and discarding already-read data on a short read.
 
 ## [2.2.2] - 2026-08-27
 ### Fixed
